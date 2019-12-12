@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<parameters>
+
+	<parameter name="randomSeed" displayName="Default Random Seed" type="int" defaultValue="__NULL__" />
+	<parameter name="processes_count" displayName="Number of processes" type="int" 
+						defaultValue="35" 
+						isReadOnly="false" 
+						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"						
+		/>
+		
+</parameters>
