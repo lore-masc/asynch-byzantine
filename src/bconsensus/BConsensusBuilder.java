@@ -1,5 +1,7 @@
 package bconsensus;
 
+import java.util.ArrayList;
+
 import repast.simphony.context.Context;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactory;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactoryFinder;
@@ -43,9 +45,15 @@ public class BConsensusBuilder implements ContextBuilder<Object> {
 
 		Parameters params = RunEnvironment.getInstance().getParameters();
 		int processesCount = (Integer) params.getValue("processes_count");
+		ArrayList<Process> processes = new ArrayList<Process>();
 		for (int i = 0; i < processesCount; i++) {
-			context.add(new Process(space, grid, i));
+			Process p = new Process(space, grid, i);
+			processes.add(p);
+			context.add(p);
 		}
+		
+		for (Process p : processes)
+			p.processes = processes;
 		
 		// Set a start location for each process
 		for (Object obj : context) {
