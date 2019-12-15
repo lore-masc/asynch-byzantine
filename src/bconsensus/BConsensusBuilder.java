@@ -26,10 +26,19 @@ public class BConsensusBuilder implements ContextBuilder<Object> {
 	public Context build(Context<Object> context) {
 		context.setId("bconsensus");
 		
-		// create a direct link network to represent broadcasting
-		NetworkBuilder<Object> netBuilder1 = new NetworkBuilder<Object>(
-				"network", context, true);
-		netBuilder1.buildNetwork();
+		// create direct link networks to represent broadcasting
+		NetworkBuilder<Object> initial_net = new NetworkBuilder<Object>(
+				"initial_net", context, true);
+		initial_net.buildNetwork();
+		NetworkBuilder<Object> echo_net = new NetworkBuilder<Object>(
+				"echo_net", context, true);
+		echo_net.buildNetwork();
+		NetworkBuilder<Object> ready_net = new NetworkBuilder<Object>(
+				"ready_net", context, true);
+		ready_net.buildNetwork();
+		NetworkBuilder<Object> accept_net = new NetworkBuilder<Object>(
+				"accept_net", context, true);
+		accept_net.buildNetwork();
 		
 		ContinuousSpaceFactory spaceFactory = ContinuousSpaceFactoryFinder
 				.createContinuousSpaceFactory(null);
@@ -45,9 +54,16 @@ public class BConsensusBuilder implements ContextBuilder<Object> {
 
 		Parameters params = RunEnvironment.getInstance().getParameters();
 		int processesCount = (Integer) params.getValue("processes_count");
+		int t = (Integer) params.getValue("byzantine_processes");
+		
 		ArrayList<Process> processes = new ArrayList<Process>();
 		for (int i = 0; i < processesCount; i++) {
-			Process p = new Process(space, grid, i);
+			Process p;
+			if (RandomHelper.nextIntFromTo(0, 1) == 1)
+				p = new ByzantineProcess(space, grid, i);
+			else
+				p = new Process(space, grid, i);
+			
 			processes.add(p);
 			context.add(p);
 		}

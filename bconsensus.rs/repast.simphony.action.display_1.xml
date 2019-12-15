@@ -13,8 +13,42 @@
       <null/>
     </entry>
   </editedStyles>
-  <netStyles/>
-  <editedNetStyles/>
+  <netStyles>
+    <entry>
+      <string>echo_net</string>
+      <string>repast.simphony.visualization.editedStyle.EditedEdgeStyle2D</string>
+    </entry>
+    <entry>
+      <string>accept_net</string>
+      <string>repast.simphony.visualization.editedStyle.EditedEdgeStyle2D</string>
+    </entry>
+    <entry>
+      <string>ready_net</string>
+      <string>repast.simphony.visualization.editedStyle.EditedEdgeStyle2D</string>
+    </entry>
+    <entry>
+      <string>initial_net</string>
+      <string>repast.simphony.visualization.editedStyle.EditedEdgeStyle2D</string>
+    </entry>
+  </netStyles>
+  <editedNetStyles>
+    <entry>
+      <string>echo_net</string>
+      <string>echo_net.style_0.xml</string>
+    </entry>
+    <entry>
+      <string>accept_net</string>
+      <string>accept_net.style_0.xml</string>
+    </entry>
+    <entry>
+      <string>ready_net</string>
+      <string>ready_net.style_0.xml</string>
+    </entry>
+    <entry>
+      <string>initial_net</string>
+      <string>initial_net.style_1.xml</string>
+    </entry>
+  </editedNetStyles>
   <frequency>ON_MOVE</frequency>
   <schedParams>
     <start>1.0</start>
@@ -23,7 +57,7 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>REPEAT</frequency>
-    <hashCode>1839321576</hashCode>
+    <hashCode>583481860</hashCode>
   </schedParams>
   <layoutClassName>foo.bar.baz</layoutClassName>
   <layoutProjection>space</layoutProjection>
@@ -40,11 +74,59 @@
       <attributes/>
       <type>continuous space</type>
     </repast.simphony.scenario.data.ProjectionData>
+    <repast.simphony.scenario.data.ProjectionData>
+      <id>initial_net</id>
+      <attributes/>
+      <type>network</type>
+    </repast.simphony.scenario.data.ProjectionData>
+    <repast.simphony.scenario.data.ProjectionData>
+      <id>echo_net</id>
+      <attributes/>
+      <type>network</type>
+    </repast.simphony.scenario.data.ProjectionData>
+    <repast.simphony.scenario.data.ProjectionData>
+      <id>ready_net</id>
+      <attributes/>
+      <type>network</type>
+    </repast.simphony.scenario.data.ProjectionData>
+    <repast.simphony.scenario.data.ProjectionData>
+      <id>accept_net</id>
+      <attributes/>
+      <type>network</type>
+    </repast.simphony.scenario.data.ProjectionData>
   </projections>
   <visualizationProperties class="repast.simphony.visualization.UnitSizeLayoutProperties">
     <unitSize>15.0</unitSize>
   </visualizationProperties>
   <projectionDescriptors>
+    <entry>
+      <string>echo_net</string>
+      <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+        <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[3]"/>
+        <props/>
+      </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+    </entry>
+    <entry>
+      <string>accept_net</string>
+      <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+        <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[5]"/>
+        <props/>
+      </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+    </entry>
+    <entry>
+      <string>ready_net</string>
+      <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+        <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[4]"/>
+        <props/>
+      </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+    </entry>
+    <entry>
+      <string>initial_net</string>
+      <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+        <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[2]"/>
+        <props/>
+      </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
+    </entry>
     <entry>
       <string>space</string>
       <repast.simphony.visualization.continuous.ContinuousProjectionDescriptor>
