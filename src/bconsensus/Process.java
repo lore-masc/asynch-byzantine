@@ -38,20 +38,26 @@ public class Process {
 		this.processes = new ArrayList<Process>();
 	}
 	
-	private void initial(int v) {	
+	private void initial(int v) {
+		// save my proposal
+		Message msg = new Message(null, Message.MessageType.INITIAL, v);
+		this.last_sent = msg;
+		
 		// send to all
 		for (Process to : this.processes) 
 			this.out_messages.add(new Message(to, Message.MessageType.INITIAL, v));
-		
-		this.step = 1;
 	}
 	
 	private void echo(int v) {
 		// send to all
 		for (Process to : this.processes)
-			this.out_messages.add(new Message(to, Message.MessageType.ECHO, v));
-		
-		
+			this.out_messages.add(new Message(to, Message.MessageType.ECHO, v));		
+	}
+	
+	private void ready(int v) {
+		// send to all
+		for (Process to : this.processes)
+			this.out_messages.add(new Message(to, Message.MessageType.READY, v));		
 	}
 	
 	@ScheduledMethod(start = 1, interval = 1)
@@ -93,21 +99,20 @@ public class Process {
 		if (this.step == 0) {
 			double new_broadcast = (Double) params.getValue("send_broadcast");
 			if (RandomHelper.nextInt() < new_broadcast) {
-				int proposed_v = RandomHelper.nextInt();
+				int proposed_v = RandomHelper.nextIntFromTo(0, 1);
 				this.initial(proposed_v);
+				this.step = 1;
 			}
 		}
 		
-		if (this.step == 1) {
-			
-		}
-		
-		if (this.step == 2) {
-			
-		}
-		
-		if (this.step == 3) {
-			
+		if (this.id == 0) {
+			System.out.println("Step: " + this.step);
+			if (this.last_sent != null) {
+				System.out.println("Proposed value: " + this.last_sent.getV());
+				System.out.println("Echo received: " + this.last_sent.getEcho());
+				System.out.println("Ready received: " + this.last_sent.getReady());
+				System.out.println("Accepted: " + this.last_sent.getAcceptState());
+			}
 		}
 		
 	}
@@ -116,7 +121,6 @@ public class Process {
 		Message msg = this.out_messages.remove();
 		Process to = msg.to;
 		to.in_messages.add(msg);
-		this.last_sent = msg;
 		
 		// Draw the current passage
 		Context<Object> context = ContextUtils.getContext(this);
@@ -147,22 +151,43 @@ public class Process {
 		Message msg = this.in_messages.remove();
 		int v = msg.getV();
 		
-		if (msg.getType() == Message.MessageType.INITIAL) 
-			for (Process to : this.processes)
-				this.out_messages.add(new Message(to, Message.MessageType.ECHO, v));
-		
-		if (msg.getType() == Message.MessageType.ECHO) {
-			if (this.last_sent != null && this.last_sent.getV() == msg.getV() && this.last_sent.getEcho() < processes.size() / 2)
-				this.last_sent.keepEcho();					
+		if (msg.getType() == Message.MessageType.INITIAL && this.step == 1) {
+			this.echo(v);
+			this.step = 2;
 		}
 		
-		if (msg.getType() == Message.MessageType.READY) {
+		if (msg.getType() == Message.MessageType.ECHO && (this.step == 1 || this.step == 2) ) {
+			if (this.last_sent != null && this.last_sent.getV() == msg.getV() && this.last_sent.getEcho() < processes.size() / 2)
+				this.last_sent.keepEcho();
+			else if (this.last_sent != null && this.last_sent.getV() == msg.getV()) {
+				if (this.step == 1)
+					this.echo(v);
+				else
+					this.ready(v);
+				this.step++;
+			}
+		}
+		
+		if (msg.getType() == Message.MessageType.READY && (this.step == 1 || this.step == 2) ) {
 			if (this.last_sent != null && this.last_sent.getV() == msg.getV() && this.last_sent.getReady() < t + 1)
 				this.last_sent.keepReady();
+			else if (this.last_sent != null && this.last_sent.getV() == msg.getV()) {
+				this.ready(v);
+				this.step++;
+			}
+		}
+		
+		if (msg.getType() == Message.MessageType.READY && this.step == 3 ) {
+			if (this.last_sent != null && this.last_sent.getV() == msg.getV() && this.last_sent.getReady() < 2 * t + 1)
+				this.last_sent.keepReady();
+			else if (this.last_sent != null && this.last_sent.getV() == msg.getV()) {
+				this.last_sent.accept();
+				this.step = 0;		// restart proposing a new value
+			}
 		}
 		
 		if (msg.getType() == Message.MessageType.ACCEPT) {
-			
+			System.out.println("Someone accepts a value: " + msg.getV());
 		}
 	}
 
