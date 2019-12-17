@@ -20,7 +20,7 @@
     </entry>
     <entry>
       <string>accept_net</string>
-      <string>repast.simphony.visualization.editedStyle.EditedEdgeStyle2D</string>
+      <string>repast.simphony.visualizationOGL2D.DefaultEdgeStyleOGL2D</string>
     </entry>
     <entry>
       <string>ready_net</string>
@@ -34,19 +34,19 @@
   <editedNetStyles>
     <entry>
       <string>echo_net</string>
-      <string>echo_net.style_0.xml</string>
+      <string>echo_net.style_2.xml</string>
     </entry>
     <entry>
       <string>accept_net</string>
-      <string>accept_net.style_0.xml</string>
+      <null/>
     </entry>
     <entry>
       <string>ready_net</string>
-      <string>ready_net.style_0.xml</string>
+      <string>ready_net.style_2.xml</string>
     </entry>
     <entry>
       <string>initial_net</string>
-      <string>initial_net.style_1.xml</string>
+      <string>initial_net.style_3.xml</string>
     </entry>
   </editedNetStyles>
   <frequency>ON_MOVE</frequency>
@@ -57,7 +57,7 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>REPEAT</frequency>
-    <hashCode>583481860</hashCode>
+    <hashCode>507272525</hashCode>
   </schedParams>
   <layoutClassName>foo.bar.baz</layoutClassName>
   <layoutProjection>space</layoutProjection>
