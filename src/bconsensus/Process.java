@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import message.Message;
-import message.Message.MessageType;
 import repast.simphony.context.Context;
 import repast.simphony.engine.environment.RunEnvironment;
 import repast.simphony.engine.schedule.ScheduledMethod;
@@ -14,7 +13,6 @@ import repast.simphony.parameter.Parameters;
 import repast.simphony.random.RandomHelper;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.graph.Network;
-import repast.simphony.space.graph.RepastEdge;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.util.ContextUtils;
 
@@ -31,6 +29,8 @@ public class Process {
 	Queue<Message> in_messages;
 	Queue<Message> out_messages;
 	ArrayList<Process> processes;
+	private int echoCount[];
+	private int readyCount[];
 	
 	public Process(ContinuousSpace<Object> space, Grid<Object> grid, int id) {
 		this.space = space;
@@ -43,6 +43,8 @@ public class Process {
 		this.in_messages = new LinkedList<Message>();
 		this.out_messages = new LinkedList<Message>();
 		this.processes = new ArrayList<Process>();
+		this.echoCount = new int[2];
+		this.readyCount = new int[2];
 	}
 	
 	private void initial(int v, int k) {
@@ -52,25 +54,29 @@ public class Process {
 		
 		// send to all
 		for (Process to : this.processes) 
-			this.out_messages.add(new Message(to, Message.MessageType.INITIAL, v, k));
+			//if (to != this) 
+				this.out_messages.add(new Message(to, Message.MessageType.INITIAL, v, k));
 	}
 	
 	private void echo(int v, int k) {
 		// send to all
 		for (Process to : this.processes)
-			this.out_messages.add(new Message(to, Message.MessageType.ECHO, v, k));		
+			//if (to != this)
+				this.out_messages.add(new Message(to, Message.MessageType.ECHO, v, k));		
 	}
 	
 	private void ready(int v, int k) {
 		// send to all
 		for (Process to : this.processes)
-			this.out_messages.add(new Message(to, Message.MessageType.READY, v, k));		
+			//if (to != this)
+				this.out_messages.add(new Message(to, Message.MessageType.READY, v, k));		
 	}
 	
 	private void accept(int v, int k) {
 		// send to all
 		for (Process to : this.processes)
-			this.out_messages.add(new Message(to, Message.MessageType.ACCEPT, v, k));		
+			//if (to != this)
+				this.out_messages.add(new Message(to, Message.MessageType.ACCEPT, v, k));		
 	}
 	
 	@ScheduledMethod(start = 1, interval = 1)
@@ -96,35 +102,53 @@ public class Process {
 				workload--;
 		}
 		
-		if (this.step == 0) {
-			double new_broadcast = (Double) params.getValue("send_broadcast");
-			if (RandomHelper.nextInt() < new_broadcast) {
-				int proposed_v = RandomHelper.nextIntFromTo(0, 1);
-				this.initial(proposed_v, this.round);
-				this.step = 1;
+		if (this.round % 3 == 0) {					// Phase 1
+			if (this.step == 0) {
+				double new_broadcast_prob = (Double) params.getValue("send_broadcast");
+				if (RandomHelper.nextDouble() < new_broadcast_prob) {
+					int proposed_v = RandomHelper.nextIntFromTo(0, 1);
+					this.initial(proposed_v, this.round);
+					this.step = 1;
+				}
 			}
+		} else if (this.round % 3 == 1) {			// Phase 2
+			
+		} else if (this.round % 3 == 2) {			// Phase 3
+			
 		}
 		
-		if (this.validatedSet.size() > 0) {
-			System.out.print(this.id + ": {");
-			System.out.print("[");
-			for (Message msg : this.validatedSet.get(0))
-				System.out.print(msg.getV() + ", ");
-			System.out.print("]");
-			System.out.println("}");
+		int step_0 = 0, step_1 = 0, step_2 = 0, step_3 = 0;
+		int value_0 = 0, value_1 = 0;
+		for (Process p : this.processes) {
+			switch (p.getProposedValue()) {
+				case 0:
+					value_0++;
+					break;
+				case 1:
+					value_1++;
+					break;
+			}
+			switch (p.getStep()) {
+				case 0:
+					step_0++;
+					break;
+				case 1:
+					step_1++;
+					break;
+				case 2:
+					step_2++;
+					break;
+				case 3:
+					step_3++;
+					break;
+			}
 		}
 		
 		if (this.id == 0) {
-			/*
-			System.out.println("Step: " + this.step);
-			if (this.last_sent != null) {
-				System.out.println("Proposed value: " + this.last_sent.getV());
-				System.out.println("Echo received: " + this.last_sent.getEcho());
-				System.out.println("Ready received: " + this.last_sent.getReady());
-			}
-			*/
+			System.out.println("(0)=" + value_0 + " (1)=" + value_1 + " f_step0 = " + step_0 + " f_step1 = " + step_1 + " f_step2 = " + step_2 + " f_step3 = " + step_3);
+			if (this.last_sent != null) 
+				System.out.println(this.id + "(" + this.last_sent.getV() + ") - step = " + this.step + " - Echo = [" + this.echoCount[0] + ", " + this.echoCount[1] + "] - Ready = [" + this.readyCount[0] + ", " + this.readyCount[1] + "]");
 		}
-		
 	}
 	
 	private void send() {
@@ -156,51 +180,96 @@ public class Process {
 	}
 	
 	// aka broadcast(v)
-	public void receive() {
+	public void receive() {		
 		Parameters params = RunEnvironment.getInstance().getParameters();
-		int t = (Integer) params.getValue("byzantine_processes");			// number of byzantine processes
+		int n = this.processes.size();
+		int t = ((n / 3 - 1) > 0) ? n / 3 - 1 : 0; //(Integer) params.getValue("byzantine_processes");			// number of byzantine processes
 		Message msg = this.in_messages.remove();
 		int v = msg.getV();
+		boolean done = false;
 		
-		if (msg.getType() == Message.MessageType.INITIAL && this.step == 1) {
+		if (msg.getType() == Message.MessageType.INITIAL && this.round == msg.getRound() && this.step <= 1) {
+			if (this.step == 0)
+				this.initial(v, this.round);
 			this.echo(v, this.round);
 			this.step = 2;
+			done = true;
 		}
 		
-		if (msg.getType() == Message.MessageType.ECHO && (this.step == 1 || this.step == 2) ) {
-			if (this.last_sent != null && this.last_sent.getV() == msg.getV() && this.last_sent.getEcho() < processes.size() / 2)
-				this.last_sent.keepEcho();
-			else if (this.last_sent != null && this.last_sent.getV() == msg.getV()) {
-				if (this.step == 1)
-					this.echo(v, this.round);
-				else
-					this.ready(v, this.round);
-				this.step++;
+		else if (msg.getType() == Message.MessageType.ECHO) {
+			if (this.step > 0 && this.round == msg.getRound()) {
+				this.keepEcho(v);
+				done = true;
+			}
+			
+			if (this.round == msg.getRound() && this.echoCount[this.getMostEchoValue()] > (n + t) / 2) {
+				if (this.step == 1 || this.step == 2) {
+					if (this.step == 1) {
+						System.out.println("ECHO INVIATO DOPO LIMITE");
+						this.echo(this.getMostEchoValue(), this.round);
+					} else if (this.step == 2) {
+						this.ready(this.getMostEchoValue(), this.round);
+					}
+					this.step++;
+					done = true;
+				}
 			}
 		}
 		
-		if (msg.getType() == Message.MessageType.READY && (this.step == 1 || this.step == 2) ) {
-			if (this.last_sent != null && this.last_sent.getV() == msg.getV() && this.last_sent.getReady() < t + 1)
-				this.last_sent.keepReady();
-			else if (this.last_sent != null && this.last_sent.getV() == msg.getV()) {
-				this.ready(v, this.round);
-				this.step++;
+		else if (msg.getType() == Message.MessageType.READY) {
+			if (this.step > 0 && this.round == msg.getRound()) {
+				this.keepReady(v);
+				done = true;
 			}
-		}
-		
-		if (msg.getType() == Message.MessageType.READY && this.step == 3 ) {
-			if (this.last_sent != null && this.last_sent.getV() == msg.getV() && this.last_sent.getReady() < 2 * t + 1)
-				this.last_sent.keepReady();
-			else if (this.last_sent != null && this.last_sent.getV() == msg.getV()) {
-				accept(v, this.round);
+			if (this.last_sent != null && /*this.last_sent.getV() == v &&*/ this.round == msg.getRound() && this.readyCount[this.getMostReadyValue()] > t + 1) {
+				if (this.step == 1 || this.step == 2) {
+					if (this.step == 1) {
+						System.out.println("ECHO INVIATO DOPO LIMITE");
+						this.echo(this.getMostReadyValue(), this.round);
+					} else if (this.step == 2) {
+						this.ready(this.getMostReadyValue(), this.round);
+					}
+					this.step++;
+					done = true;
+				}
+			}
+			if (this.round == msg.getRound() && this.readyCount[this.getMostReadyValue()] > 2 * t + 1 && this.step == 3) {
+				accept(this.getMostReadyValue(), this.round);
 				update_validate_set(this.last_sent);
 				this.round++;
 				this.step = 0;		// restart proposing a new value
+				done = true;
 			}
 		}
 		
-		if (msg.getType() == Message.MessageType.ACCEPT)
+		else if (msg.getType() == Message.MessageType.ACCEPT) {
 			update_validate_set(msg);
+			done = true;
+			System.out.println("ACQUISITO " + msg.getType() + " dal processo " + this.id + "(" + this.last_sent.getV() + ") nello step " + this.step + " v = " + v);
+		}
+		
+		/*
+		if (done)
+			System.out.println("ACQUISITO " + msg.getType() + " dal processo " + this.id + "(" + this.last_sent.getV() + ") nello step " + this.step + " v = " + v);
+		else
+			System.out.println("scartato " + msg.getType() + " dal processo " + this.id + "(" + this.last_sent.getV() + ") nello step " + this.step + " v = " + v);
+		*/
+	}
+
+	private int getMostEchoValue() {
+		return (this.echoCount[0] > this.echoCount[1]) ? 0: 1;
+	}
+	
+	private int getMostReadyValue() {
+		return (this.readyCount[0] > this.readyCount[1]) ? 0: 1;
+	}
+
+	private void keepEcho(int v) {
+		this.echoCount[v]++;
+	}
+
+	private void keepReady(int v) {
+		this.readyCount[v]++;
 	}
 	
 	public void update_validate_set(Message msg) {
@@ -229,5 +298,12 @@ public class Process {
 		ready_net.removeEdges();
 		accept_net.removeEdges();
 	}
+	
+	public int getStep() {
+		return this.step;
+	}
 
+	public int getProposedValue() {
+		return (this.last_sent != null) ? this.last_sent.getV() : -1;
+	}
 }

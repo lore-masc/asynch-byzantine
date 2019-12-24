@@ -55,11 +55,17 @@ public class BConsensusBuilder implements ContextBuilder<Object> {
 		Parameters params = RunEnvironment.getInstance().getParameters();
 		int processesCount = (Integer) params.getValue("processes_count");
 		int t = (Integer) params.getValue("byzantine_processes");
+		ArrayList<Integer> fault_indexes = new ArrayList<Integer>();
+		for (int i = t; i > 0 && fault_indexes.size() < processesCount; i--) {
+			int n = RandomHelper.nextIntFromTo(0, processesCount);
+			if (!fault_indexes.contains(n))
+				fault_indexes.add(n);
+		}
 		
 		ArrayList<Process> processes = new ArrayList<Process>();
 		for (int i = 0; i < processesCount; i++) {
 			Process p;
-			if (RandomHelper.nextIntFromTo(0, 1) == 1)
+			if (fault_indexes.contains(i))
 				p = new ByzantineProcess(space, grid, i);
 			else
 				p = new Process(space, grid, i);
