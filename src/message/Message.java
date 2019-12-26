@@ -5,11 +5,13 @@ import bconsensus.Process;
 public class Message {
 	public enum MessageType {INITIAL, ECHO, READY, ACCEPT};
 	protected MessageType type;
+	protected Process sender;
 	protected int v;
 	protected int round;
 	public Process to;
 	
-	public Message(Process to, MessageType type, int v, int round) {
+	public Message(Process sender, Process to, MessageType type, int v, int round) {
+		this.sender = sender;
 		this.to = to;
 		this.type = type;
 		this.v = v;
@@ -28,4 +30,7 @@ public class Message {
 		return this.round;
 	}
 
+	public Process getSender() {
+		return this.sender;
+	}
 }
