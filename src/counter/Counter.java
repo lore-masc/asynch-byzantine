@@ -66,4 +66,20 @@ public class Counter {
 		}
 		return 1;
 	}
+	
+	public int getEcho0() {
+		return this.echoCounter.get(0);
+	}
+	
+	public int getEcho1() {
+		return this.echoCounter.get(1);
+	}
+	
+	public int getReady0() {
+		return this.readyCounter.get(0);
+	}
+	
+	public int getReady1() {
+		return this.readyCounter.get(1);
+	}
 }
