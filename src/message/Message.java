@@ -3,7 +3,7 @@ package message;
 import bconsensus.Process;
 
 public class Message {
-	public enum MessageType {INITIAL, ECHO, READY, ACCEPT};
+	public enum MessageType {INITIAL, ECHO, READY};
 	protected MessageType type;
 	protected Process sender;
 	protected int v;
@@ -32,5 +32,17 @@ public class Message {
 
 	public Process getSender() {
 		return this.sender;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		boolean t = false;
+		if (o instanceof Message) {
+			Message msgo = (Message) o;
+			if(this.type.equals(msgo.type) && this.sender.getID() == msgo.sender.getID() && this.v == msgo.v && this.round == msgo.round) {
+				t = true;
+			}
+		}
+		return t;
 	}
 }

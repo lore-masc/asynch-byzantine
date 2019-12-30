@@ -4,5 +4,4 @@
   	<projection type="network" id="initial_net"/>
   	<projection type="network" id="echo_net"/>
   	<projection type="network" id="ready_net"/>
-  	<projection type="network" id="accept_net"/>
 </context>

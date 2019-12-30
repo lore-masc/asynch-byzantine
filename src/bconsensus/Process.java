@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import javax.media.j3d.Sound;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import counter.Counter;
@@ -24,34 +26,41 @@ public class Process {
 	private ContinuousSpace<Object> space;
 	private Grid<Object> grid;
 	private int id;
-	private Message last_sent;
 	private Integer decision;
+	private int round;
+	private Integer value;
 	private HashMap< Integer, ArrayList<Message> > validatedSet; 
 	private HashMap<Pair<Integer, Integer>, Counter> counter; 			// get the echo/ready counter given a sender process id
 	private HashMap<Pair<Integer, Integer>, Integer> steps;
-	private HashMap<Integer, Integer> rounds;
+	//private HashMap<Integer, Integer> rounds;
 	Queue<Message> in_messages;
 	Queue<Message> out_messages;
 	ArrayList<Process> processes;
+	
 	
 	public Process(ContinuousSpace<Object> space, Grid<Object> grid, int id) {
 		this.space = space;
 		this.grid = grid;
 		this.id = id;
 		this.decision = null;
+		this.round = 0;
+		this.value = null;
 		this.validatedSet = new HashMap< Integer, ArrayList<Message> >();
 		this.in_messages = new LinkedList<Message>();
 		this.out_messages = new LinkedList<Message>();
 		this.processes = new ArrayList<Process>();
 		this.counter = new HashMap<Pair<Integer, Integer>, Counter>();
 		this.steps = new HashMap<Pair<Integer,Integer>, Integer>();
-		this.rounds = new HashMap<Integer, Integer>();
+		//this.rounds = new HashMap<Integer, Integer>();
+	}
+	
+	public int getID() {
+		return this.id;
 	}
 	
 	private void initial(Process sender, int v, int k) {
 		// save my proposal
 		Message msg = new Message(this, null, Message.MessageType.INITIAL, v, k);
-		this.last_sent = msg;
 				
 		// send to all
 		for (Process to : this.processes) 
@@ -68,12 +77,6 @@ public class Process {
 		// send to all
 		for (Process to : this.processes)
 			this.out_messages.add(new Message(sender, to, Message.MessageType.READY, v, k));		
-	}
-	
-	private void accept(Process sender, int v, int k) {
-		// send to all
-		for (Process to : this.processes)
-			this.out_messages.add(new Message(sender, to, Message.MessageType.ACCEPT, v, k));		
 	}
 	
 	@ScheduledMethod(start = 1, interval = 1)
@@ -99,32 +102,36 @@ public class Process {
 				workload--;
 		}
 		
-		if (!this.rounds.containsKey(this.id)) {
+		/*if (!this.rounds.containsKey(this.id)) {
 			rounds.put(this.id, 0);
-		}
+		}*/
 		
-		if (this.id == 0 || this.id == 5) {
-			if (this.rounds.get(this.id) % 3 == 0) {					// Phase 1
-				if (!this.steps.containsKey(Pair.of(this.id, this.rounds.get(this.id)))) {
-					steps.put(Pair.of(this.id, this.rounds.get(this.id)), 0);
-				
-					//steps.put(Pair.of(this.id, this.round + 1), 0);
+		//if (this.id == 0 /*|| this.id == 5*/) {
+			if (this.round % 3 == 0) {					// Phase 1
+				if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
+					steps.put(Pair.of(this.id, this.round), 0);
+					
 					//---------
 					
 					int proposed_v = RandomHelper.nextIntFromTo(0, 1);
-					this.broadcast(this.rounds.get(this.id), proposed_v);
-					//this.broadcast(this.round + 1, proposed_v);
+					this.broadcast(this.round, proposed_v);
 					System.out.println(this.id + " broadcasts " + proposed_v);
 				}
 				
-			} else if (this.rounds.get(this.id) % 3 == 1) {			// Phase 2
-				
-			} else if (this.rounds.get(this.id) % 3 == 2) {			// Phase 3
+			} else if (this.round % 3 == 1) {			// Phase 2
+				System.out.println(this.id + " is in PHASE 2");
+				/*
+				if(!this.steps.containsKey(Pair.of(this.id, this.round))) {
+					steps.put(Pair.of(this.id, this.round + 1), 0);
+					int proposed_v = RandomHelper.nextIntFromTo(0, 1);
+					this.broadcast(this.round + 1, proposed_v);
+				}*/
+			} else if (this.round % 3 == 2) {			// Phase 3
 				
 			}
-		}
+		//}
 		
-		if (this.last_sent != null) {			
+		if (this.id == 0) {			
 			for(Pair<Integer, Integer> p : this.counter.keySet()) {
 				Counter count = new Counter();
 				count = counter.getOrDefault(p, count);
@@ -137,7 +144,7 @@ public class Process {
 	
 	private void broadcast(int r, int v) {
 		this.initial(this, v, r);
-		this.steps.put(Pair.of(this.id, this.rounds.get(this.id)), 1);
+		this.steps.put(Pair.of(this.id, r), 1);
 	}
 	
 	private void send() {
@@ -162,9 +169,6 @@ public class Process {
 			case READY:
 				ready_net.addEdge(this, to);
 				break;
-			case ACCEPT:
-				accept_net.addEdge(this, to);
-				break;
 		}
 	}
 	
@@ -174,29 +178,29 @@ public class Process {
 		int t = ((n / 3 - 1) > 0) ? n / 3 - 1 : 0;			// number of byzantine processes
 		Message msg = this.in_messages.remove();
 		int v = msg.getV();
-		boolean done = false;
 		Process sender = msg.getSender();
 
-		if(!this.rounds.containsKey(sender.id)) {
+		/*if(!this.rounds.containsKey(sender.id)) {
 			this.rounds.put(sender.id, msg.getRound());
-		}
-		if(!this.steps.containsKey(Pair.of(sender.id, this.rounds.get(sender.id)))) {
-			this.steps.put(Pair.of(sender.id, this.rounds.get(sender.id)), 0);
+		}*/
+		if(!this.steps.containsKey(Pair.of(sender.id, msg.getRound()))) {
+			this.steps.put(Pair.of(sender.id, msg.getRound()), 0);
 		}
 		
 		
-		if (msg.getType() == Message.MessageType.INITIAL && this.rounds.get(sender.id) == msg.getRound() && this.steps.get(Pair.of(sender.id, this.rounds.get(sender.id))) <= 1) {
+		if (msg.getType() == Message.MessageType.INITIAL /*&& this.round == msg.getRound()*/ && this.steps.get(Pair.of(sender.id, msg.getRound())) <= 1) {
 			//if (this.step == 0)
 			//	this.initial(sender, v, this.round);
-			this.echo(sender, v, rounds.get(sender.id));
-			this.steps.put(Pair.of(sender.id, rounds.get(sender.id)), 2);
-			done = true;
+			this.echo(sender, v, msg.getRound());
+			this.steps.put(Pair.of(sender.id, msg.getRound()), 2);
 		}
 		else if (msg.getType() == Message.MessageType.ECHO) {
-			if (this.steps.getOrDefault(Pair.of(sender.id, rounds.get(sender.id)), 1) > 0 && rounds.get(sender.id) == msg.getRound()) {
+			if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) > 0 /*&& this.round == msg.getRound()*/) {
 				Counter count = new Counter();
-				if(counter.keySet().contains(Pair.of(sender.id, rounds.get(sender.id)))) {
-					count = counter.get(Pair.of(sender.id, rounds.get(sender.id)));
+				
+				//Increment or create the counter
+				if(counter.keySet().contains(Pair.of(sender.id, msg.getRound()))) {
+					count = counter.get(Pair.of(sender.id, msg.getRound()));
 					count.incrementEchoCounter(v);
 				} else {
 					ArrayList<Integer> echoArray = new ArrayList<Integer>();
@@ -205,31 +209,31 @@ public class Process {
 					echoArray.set(v, echoArray.get(v) + 1);
 					count.setEchoCounter(echoArray);	
 				}
-				counter.put(Pair.of(sender.id, rounds.get(sender.id)), count);
-				done = true;
+				counter.put(Pair.of(sender.id, msg.getRound()), count);
 			}
 			Counter def = new Counter();
-			Counter count = counter.getOrDefault(Pair.of(sender.id, rounds.get(sender.id)), def);
-			if (this.rounds.get(sender.id) == msg.getRound() && count.mostEchoValueCounter() > (n + t) / 2) {
-				if (this.steps.getOrDefault(Pair.of(sender.id, rounds.get(sender.id)), 1) == 1 || this.steps.get(Pair.of(sender.id, this.rounds.get(sender.id))) == 2) {
-					if (this.steps.getOrDefault(Pair.of(sender.id, rounds.get(sender.id)), 1) == 1) {
-						this.echo(sender, count.mostEchoValue(), rounds.get(sender.id));
-					} else if (this.steps.getOrDefault(Pair.of(sender.id, rounds.get(sender.id)), 1) == 2) {
-						this.ready(sender, count.mostEchoValue(), rounds.get(sender.id));
+			Counter count = counter.getOrDefault(Pair.of(sender.id, msg.getRound()), def);
+			if (/*this.round == msg.getRound() &&*/ count.mostEchoValueCounter() > (n + t) / 2) {
+				
+				if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) == 1 || this.steps.get(Pair.of(sender.id, msg.getRound())) == 2) {
+					if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) == 1) {
+						this.echo(sender, count.mostEchoValue(), msg.getRound());
+					} else if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 2) == 2) {
+						this.ready(sender, count.mostEchoValue(), msg.getRound());
 					}
 					
-					int step = this.steps.getOrDefault(Pair.of(sender.id, rounds.get(sender.id)), 1);
+					int step = this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1);
 					step++;
-					this.steps.put(Pair.of(sender.id, rounds.get(sender.id)), step);
-					done = true;
+					this.steps.put(Pair.of(sender.id, msg.getRound()), step);
 				}
 			}
 		}
 		else if (msg.getType() == Message.MessageType.READY) {
-			if (this.steps.getOrDefault(Pair.of(sender.id, rounds.get(sender.id)), 1) > 0 && rounds.get(sender.id) == msg.getRound()) {
+			if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) > 0 /*&& this.round == msg.getRound()*/) {
 				Counter count = new Counter();
-				if(counter.keySet().contains(Pair.of(sender.id, rounds.get(sender.id))) && v <= 1) {
-					count = counter.getOrDefault(Pair.of(sender.id, rounds.get(sender.id)), count);
+				//Increment or create the counter
+				if(counter.keySet().contains(Pair.of(sender.id, msg.getRound())) && v <= 1) {
+					count = counter.getOrDefault(Pair.of(sender.id, msg.getRound()), count);
 					count.incrementReadyCounter(v);
 				} else {
 					ArrayList<Integer> readyArray = new ArrayList<Integer>();
@@ -238,45 +242,75 @@ public class Process {
 					readyArray.set(v, readyArray.get(v) + 1);
 					count.setReadyCounter(readyArray);
 				}
-				counter.put(Pair.of(sender.id, rounds.get(sender.id)), count);
-				done = true;
+				counter.put(Pair.of(sender.id, msg.getRound()), count);
 			}
 			Counter def = new Counter();
-			Counter count = counter.getOrDefault(Pair.of(sender.id, rounds.get(sender.id)), def);
-			if (this.last_sent != null && rounds.get(sender.id) == msg.getRound() && count.mostReadyValueCounter() > t + 1) {
-				if (this.steps.get(Pair.of(sender.id, rounds.get(sender.id))) == 1 || this.steps.get(Pair.of(sender.id, rounds.get(sender.id))) == 2) {
-					if (this.steps.get(Pair.of(sender.id, rounds.get(sender.id))) == 1) {
-						this.echo(sender, count.mostReadyValue(), rounds.get(sender.id));
-					} else if (this.steps.get(Pair.of(sender.id, rounds.get(sender.id))) == 2) {
-						this.ready(sender, count.mostReadyValue(), rounds.get(sender.id));
+			Counter count = counter.getOrDefault(Pair.of(sender.id, msg.getRound()), def);
+			if (/*this.round == msg.getRound() && */count.mostReadyValueCounter() > t + 1) {
+				if (this.steps.get(Pair.of(sender.id, msg.getRound())) == 1 || this.steps.get(Pair.of(sender.id, msg.getRound())) == 2) {
+					if (this.steps.get(Pair.of(sender.id, msg.getRound())) == 1) {
+						this.echo(sender, count.mostReadyValue(), msg.getRound());
+					} else if (this.steps.get(Pair.of(sender.id, msg.getRound())) == 2) {
+						this.ready(sender, count.mostReadyValue(), msg.getRound());
 					}
-					int step = this.steps.get(Pair.of(sender.id, rounds.get(sender.id)));
+					int step = this.steps.get(Pair.of(sender.id, msg.getRound()));
 					step++;
-					this.steps.put(Pair.of(sender.id, rounds.get(sender.id)), step);
-					done = true;
+					this.steps.put(Pair.of(sender.id, msg.getRound()), step);
 				}
 			}
-			if (this.rounds.get(sender.id) == msg.getRound() && count.mostReadyValueCounter() > 2 * t + 1 && this.steps.get(Pair.of(sender.id, rounds.get(sender.id))) == 3) {
-				accept(sender, count.mostReadyValue(), rounds.get(sender.id));
+			if (count.mostReadyValueCounter() > 2 * t + 1 && this.steps.get(Pair.of(sender.id, msg.getRound())) == 3) {
 				update_validate_set(msg);
-				int round = this.rounds.get(sender.id);
-				round++;
-				this.rounds.put(sender.id, round);
-				this.steps.put(Pair.of(sender.id, rounds.get(sender.id)), 0);		// restart proposing a new value
-				done = true;
+				check_validate_set(msg.getRound());
 			}
-		}
-		else if (msg.getType() == Message.MessageType.ACCEPT) {
-			update_validate_set(msg);
-			done = true;
+			
 		}
 		
 	}
 	
+	public void check_validate_set(int msgRound) {
+		Parameters params = RunEnvironment.getInstance().getParameters();
+		int n = this.processes.size();
+		int t = ((n / 3 - 1) > 0) ? n / 3 - 1 : 0;			// number of byzantine processes
+		int set[] = new int[2];
+		
+		if(this.validatedSet.containsKey(msgRound)) {
+			ArrayList<Message> messages = this.validatedSet.get(msgRound);
+			
+			if(messages.size() == (n-t) && this.round == msgRound) {
+				for (Message message : messages) {
+					set[message.getV()]++;
+				}
+				
+				this.value = (set[0] >= set[1]) ? 0 : 1;
+				
+				this.round++;
+				this.steps.put(Pair.of(this.id, this.round), 0);// restart proposing a new value
+			}
+		}
+	}
 	
 	public void update_validate_set(Message msg) {
-		System.out.println(msg.getSender().id + " ACCEPTED " + msg.getV());
+		System.out.println(msg.getSender().id + " ACCEPTED " + msg.getV() + " with ROUND " + msg.getRound());
+		int msgRound = msg.getRound();
 		
+		ArrayList<Message> messages;
+		if (!this.validatedSet.containsKey(msgRound)) {
+			messages = new ArrayList<Message>();
+		} else {
+			messages = this.validatedSet.get(msgRound);
+		}
+		
+		if (!messages.contains(msg)) {
+			messages.add(msg);
+			this.validatedSet.put(msgRound, messages);
+		}
+		
+		//if(this.validatedSet.entrySet().size() == 10) {
+			System.out.print("(round: " + msgRound + ", id: " + this.id + "[" + this.round + "]) : [");
+			for(Message m : messages)
+				System.out.print("(s:" + m.getSender().id + ", v:" + m.getV() + "), ");
+			System.out.println("]");
+		//}
 	}
 	
 	@ScheduledMethod(start = 3, interval = 3)
@@ -286,12 +320,10 @@ public class Process {
 		Network<Object> initial_net = (Network<Object>) context.getProjection("initial_net");
 		Network<Object> echo_net = (Network<Object>) context.getProjection("echo_net");
 		Network<Object> ready_net = (Network<Object>) context.getProjection("ready_net");
-		Network<Object> accept_net = (Network<Object>) context.getProjection("accept_net");
 		
 		// Clear all printed edges
 		initial_net.removeEdges();
 		echo_net.removeEdges();
 		ready_net.removeEdges();
-		accept_net.removeEdges();
 	}
 }

@@ -36,9 +36,6 @@ public class BConsensusBuilder implements ContextBuilder<Object> {
 		NetworkBuilder<Object> ready_net = new NetworkBuilder<Object>(
 				"ready_net", context, true);
 		ready_net.buildNetwork();
-		NetworkBuilder<Object> accept_net = new NetworkBuilder<Object>(
-				"accept_net", context, true);
-		accept_net.buildNetwork();
 		
 		ContinuousSpaceFactory spaceFactory = ContinuousSpaceFactoryFinder
 				.createContinuousSpaceFactory(null);

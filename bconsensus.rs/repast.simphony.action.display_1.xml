@@ -19,10 +19,6 @@
       <string>repast.simphony.visualization.editedStyle.EditedEdgeStyle2D</string>
     </entry>
     <entry>
-      <string>accept_net</string>
-      <string>repast.simphony.visualizationOGL2D.DefaultEdgeStyleOGL2D</string>
-    </entry>
-    <entry>
       <string>ready_net</string>
       <string>repast.simphony.visualization.editedStyle.EditedEdgeStyle2D</string>
     </entry>
@@ -34,19 +30,15 @@
   <editedNetStyles>
     <entry>
       <string>echo_net</string>
-      <string>echo_net.style_2.xml</string>
-    </entry>
-    <entry>
-      <string>accept_net</string>
-      <null/>
+      <string>echo_net.style_3.xml</string>
     </entry>
     <entry>
       <string>ready_net</string>
-      <string>ready_net.style_2.xml</string>
+      <string>ready_net.style_3.xml</string>
     </entry>
     <entry>
       <string>initial_net</string>
-      <string>initial_net.style_3.xml</string>
+      <string>initial_net.style_4.xml</string>
     </entry>
   </editedNetStyles>
   <frequency>ON_MOVE</frequency>
@@ -57,7 +49,7 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>REPEAT</frequency>
-    <hashCode>507272525</hashCode>
+    <hashCode>1311983774</hashCode>
   </schedParams>
   <layoutClassName>foo.bar.baz</layoutClassName>
   <layoutProjection>space</layoutProjection>
@@ -89,11 +81,6 @@
       <attributes/>
       <type>network</type>
     </repast.simphony.scenario.data.ProjectionData>
-    <repast.simphony.scenario.data.ProjectionData>
-      <id>accept_net</id>
-      <attributes/>
-      <type>network</type>
-    </repast.simphony.scenario.data.ProjectionData>
   </projections>
   <visualizationProperties class="repast.simphony.visualization.UnitSizeLayoutProperties">
     <unitSize>15.0</unitSize>
@@ -103,13 +90,6 @@
       <string>echo_net</string>
       <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
         <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[3]"/>
-        <props/>
-      </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
-    </entry>
-    <entry>
-      <string>accept_net</string>
-      <repast.simphony.visualization.engine.DefaultProjectionDescriptor>
-        <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData[5]"/>
         <props/>
       </repast.simphony.visualization.engine.DefaultProjectionDescriptor>
     </entry>

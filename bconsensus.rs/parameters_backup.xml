@@ -24,12 +24,6 @@
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									
 		/>
-				<parameter name="send_broadcast" displayName="Probability to send new broadcast" type="double" 
-						defaultValue="0.001" 
-						isReadOnly="false" 
-						converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter"
-									
-		/>
 				<parameter name="processes_count" displayName="Number of total processes" type="int" 
 						defaultValue="50" 
 						isReadOnly="false" 
