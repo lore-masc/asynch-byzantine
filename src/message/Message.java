@@ -6,14 +6,16 @@ public class Message {
 	public enum MessageType {INITIAL, ECHO, READY};
 	protected MessageType type;
 	protected Process sender;
+	protected boolean label;
 	protected int v;
 	protected int round;
 	public Process to;
 	
-	public Message(Process sender, Process to, MessageType type, int v, int round) {
+	public Message(Process sender, Process to, MessageType type, int v, boolean label, int round) {
 		this.sender = sender;
 		this.to = to;
 		this.type = type;
+		this.label = label;
 		this.v = v;
 		this.round = round;
 	}
@@ -32,6 +34,10 @@ public class Message {
 
 	public Process getSender() {
 		return this.sender;
+	}
+	
+	public boolean getLabel() {
+		return this.label;
 	}
 	
 	@Override

@@ -26,6 +26,7 @@ public class Process {
 	private int id;
 	private Integer decision;
 	private int round;
+	private boolean label;
 	private Integer value;
 	private HashMap< Integer, ArrayList<Message> > validatedSet; 
 	private HashMap<Pair<Integer, Integer>, Counter> counter; 			// get the echo/ready counter given a sender process id
@@ -42,6 +43,7 @@ public class Process {
 		this.id = id;
 		this.decision = null;
 		this.round = 0;
+		this.label = false;
 		this.value = null;
 		this.validatedSet = new HashMap< Integer, ArrayList<Message> >();
 		this.in_messages = new LinkedList<Message>();
@@ -57,24 +59,21 @@ public class Process {
 	}
 	
 	private void initial(Process sender, int v, int k) {
-		// save my proposal
-		Message msg = new Message(this, null, Message.MessageType.INITIAL, v, k);
-				
 		// send to all
 		for (Process to : this.processes) 
-			this.out_messages.add(new Message(sender, to, Message.MessageType.INITIAL, v, k));
+			this.out_messages.add(new Message(sender, to, Message.MessageType.INITIAL, v, this.label, k));
 	}
 	
 	private void echo(Process sender, int v, int k) {
 		// send to all
 		for (Process to : this.processes)
-			this.out_messages.add(new Message(sender, to, Message.MessageType.ECHO, v, k));		
+			this.out_messages.add(new Message(sender, to, Message.MessageType.ECHO, v, this.label, k));		
 	}
 	
 	private void ready(Process sender, int v, int k) {
 		// send to all
 		for (Process to : this.processes)
-			this.out_messages.add(new Message(sender, to, Message.MessageType.READY, v, k));		
+			this.out_messages.add(new Message(sender, to, Message.MessageType.READY, v, this.label, k));		
 	}
 	
 	@ScheduledMethod(start = 1, interval = 1)
@@ -100,40 +99,31 @@ public class Process {
 				workload--;
 		}
 		
-		/*if (!this.rounds.containsKey(this.id)) {
-			rounds.put(this.id, 0);
-		}*/
-		
-		//if (this.id == 0 /*|| this.id == 5*/) {
-			if (this.round % 3 == 0) {					// Phase 1
-				if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
-					this.steps.put(Pair.of(this.id, this.round), 0);
-					
-					//---------
-					
-					int proposed_v = RandomHelper.nextIntFromTo(0, 1);
-					this.broadcast(this.round, proposed_v);
-					System.out.println(this.id + " broadcasts " + proposed_v);
-				}
+		if (this.round % 3 == 0) {					// Phase 1
+			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
+				this.steps.put(Pair.of(this.id, this.round), 0);
 				
-			} else if (this.round % 3 == 1) {			// Phase 2
-				if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
-					this.steps.put(Pair.of(this.id, this.round), 0);
-
-					System.out.println("PHASE 2: " + this.id);
-					System.out.println(this.id + " broadcasts " + this.value);
-					this.broadcast(this.round, this.value);
-				}
-				/*
-				if(!this.steps.containsKey(Pair.of(this.id, this.round))) {
-					steps.put(Pair.of(this.id, this.round + 1), 0);
-					int proposed_v = RandomHelper.nextIntFromTo(0, 1);
-					this.broadcast(this.round + 1, proposed_v);
-				}*/
-			} else if (this.round % 3 == 2) {			// Phase 3
-				System.out.println("PHASE 3");
+				int proposed_v = RandomHelper.nextIntFromTo(0, 1);
+				this.broadcast(this.round, proposed_v);
+				System.out.println(this.id + " broadcasts " + proposed_v);
 			}
-		//}
+		} else if (this.round % 3 == 1) {			// Phase 2
+			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
+				this.steps.put(Pair.of(this.id, this.round), 0);
+
+				System.out.println("PHASE 2: " + this.id);
+				System.out.println(this.id + " broadcasts " + this.value);
+				this.broadcast(this.round, this.value);
+			}
+		} else if (this.round % 3 == 2) {			// Phase 3
+			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
+				this.steps.put(Pair.of(this.id, this.round), 0);
+				
+				System.out.println("PHASE 3: " + this.id);
+				System.out.println(this.id + " broadcasts " + this.value + " with label = " + this.label);
+				
+			}
+		}
 		
 		if (this.id == 0) {			
 			for(Pair<Integer, Integer> p : this.counter.keySet()) {
@@ -279,20 +269,22 @@ public class Process {
 		if(this.validatedSet.containsKey(msgRound)) {
 			ArrayList<Message> messages = this.validatedSet.get(msgRound);
 			
+			for (Message message : messages) {
+				set[message.getV()]++;
+			}
+			
 			if(messages.size() == (n-t) && this.round == msgRound) {
-				switch (this.round%3) {
+				switch (this.round % 3) {
 				case 0:
-					for (Message message : messages) {
-						set[message.getV()]++;
-					}
-					
 					this.value = (set[0] >= set[1]) ? 0 : 1;
 					break;
 				case 1:
 					if(set[0] > (n/2)) {
-						//this.value = label + 0
+						this.value = 0;
+						this.label = true;
 					} else if (set[1] > (n/2)) {
-						//this.value = label + 1
+						this.value = 1;
+						this.label = true;
 					}
 					
 					break;
