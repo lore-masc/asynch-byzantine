@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import javax.media.j3d.Sound;
-
 import org.apache.commons.lang3.tuple.Pair;
 
 import counter.Counter;
@@ -109,7 +107,7 @@ public class Process {
 		//if (this.id == 0 /*|| this.id == 5*/) {
 			if (this.round % 3 == 0) {					// Phase 1
 				if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
-					steps.put(Pair.of(this.id, this.round), 0);
+					this.steps.put(Pair.of(this.id, this.round), 0);
 					
 					//---------
 					
@@ -119,7 +117,13 @@ public class Process {
 				}
 				
 			} else if (this.round % 3 == 1) {			// Phase 2
-				System.out.println(this.id + " is in PHASE 2");
+				if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
+					this.steps.put(Pair.of(this.id, this.round), 0);
+
+					System.out.println("PHASE 2: " + this.id);
+					System.out.println(this.id + " broadcasts " + this.value);
+					this.broadcast(this.round, this.value);
+				}
 				/*
 				if(!this.steps.containsKey(Pair.of(this.id, this.round))) {
 					steps.put(Pair.of(this.id, this.round + 1), 0);
@@ -127,7 +131,7 @@ public class Process {
 					this.broadcast(this.round + 1, proposed_v);
 				}*/
 			} else if (this.round % 3 == 2) {			// Phase 3
-				
+				System.out.println("PHASE 3");
 			}
 		//}
 		
@@ -157,7 +161,6 @@ public class Process {
 		Network<Object> initial_net = (Network<Object>) context.getProjection("initial_net");
 		Network<Object> echo_net = (Network<Object>) context.getProjection("echo_net");
 		Network<Object> ready_net = (Network<Object>) context.getProjection("ready_net");
-		Network<Object> accept_net = (Network<Object>) context.getProjection("accept_net");
 		
 		switch (msg.getType()) {
 			case INITIAL:
@@ -277,20 +280,34 @@ public class Process {
 			ArrayList<Message> messages = this.validatedSet.get(msgRound);
 			
 			if(messages.size() == (n-t) && this.round == msgRound) {
-				for (Message message : messages) {
-					set[message.getV()]++;
+				switch (this.round%3) {
+				case 0:
+					for (Message message : messages) {
+						set[message.getV()]++;
+					}
+					
+					this.value = (set[0] >= set[1]) ? 0 : 1;
+					break;
+				case 1:
+					if(set[0] > (n/2)) {
+						//this.value = label + 0
+					} else if (set[1] > (n/2)) {
+						//this.value = label + 1
+					}
+					
+					break;
+				case 2:
+					break;
 				}
 				
-				this.value = (set[0] >= set[1]) ? 0 : 1;
-				
 				this.round++;
-				this.steps.put(Pair.of(this.id, this.round), 0);// restart proposing a new value
+				//this.steps.put(Pair.of(this.id, this.round), 0);// restart proposing a new value
 			}
 		}
 	}
 	
 	public void update_validate_set(Message msg) {
-		System.out.println(msg.getSender().id + " ACCEPTED " + msg.getV() + " with ROUND " + msg.getRound());
+		//System.out.println(msg.getSender().id + " ACCEPTED " + msg.getV() + " with ROUND " + msg.getRound());
 		int msgRound = msg.getRound();
 		
 		ArrayList<Message> messages;
