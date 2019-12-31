@@ -122,10 +122,11 @@ public class Process {
 				System.out.println("PHASE 3: " + this.id);
 				System.out.println(this.id + " broadcasts " + this.value + " with label = " + this.label);
 				
+				this.broadcast(this.round, this.value);
 			}
 		}
 		
-		if (this.id == 0) {			
+		/*if (this.id == 0) {			
 			for(Pair<Integer, Integer> p : this.counter.keySet()) {
 				Counter count = new Counter();
 				count = counter.getOrDefault(p, count);
@@ -133,7 +134,10 @@ public class Process {
 					System.out.println("PAIR: (" + p.getLeft() + " ; " + p.getRight() + ") - Echo 0: " + count.getEcho0() + " - Echo 1: " + count.getEcho1() + " Ready 0: " + count.getReady0() + " Ready 1: " + count.getReady1());
 				}
 			}
-		}
+		}*/
+		
+		if(this.decision != null)
+			System.out.println(this.id + " DECIDES " + this.decision);
 	}
 	
 	private void broadcast(int r, int v) {
@@ -265,35 +269,53 @@ public class Process {
 		int n = this.processes.size();
 		int t = ((n / 3 - 1) > 0) ? n / 3 - 1 : 0;			// number of byzantine processes
 		int set[] = new int[2];
+		boolean msgLabel = true;
 		
 		if(this.validatedSet.containsKey(msgRound)) {
 			ArrayList<Message> messages = this.validatedSet.get(msgRound);
 			
 			for (Message message : messages) {
 				set[message.getV()]++;
+				if(!message.getLabel())
+					msgLabel = message.getLabel();
 			}
 			
 			if(messages.size() == (n-t) && this.round == msgRound) {
 				switch (this.round % 3) {
 				case 0:
-					this.value = (set[0] >= set[1]) ? 0 : 1;
+					if(set[0] >= set[1]) {
+						this.value = 0;
+					} else {
+						this.value = 1;
+					}
 					break;
 				case 1:
-					if(set[0] > (n/2)) {
-						this.value = 0;
-						this.label = true;
-					} else if (set[1] > (n/2)) {
-						this.value = 1;
-						this.label = true;
-					}
-					
+					for (int i = 0; i < set.length; i++)
+						if(set[i] > (n/2)) {
+							this.value = i;
+							this.label = true;
+							break;
+						}
 					break;
 				case 2:
+					boolean d = false;
+					for (int i = 0; i < set.length && !d; i++) {
+						if(set[i] > (2*t) && msgLabel) {
+							this.decision = i;
+							d = true;
+						} else if (set[i] > t && msgLabel) {
+							this.value = i;
+							d = true;
+						}
+					}
+					if (!d)
+						this.value = RandomHelper.nextIntFromTo(0, 1);
+					
 					break;
 				}
 				
-				this.round++;
-				//this.steps.put(Pair.of(this.id, this.round), 0);// restart proposing a new value
+				if(this.decision == null)
+					this.round++;
 			}
 		}
 	}
@@ -314,12 +336,10 @@ public class Process {
 			this.validatedSet.put(msgRound, messages);
 		}
 		
-		//if(this.validatedSet.entrySet().size() == 10) {
-			System.out.print("(round: " + msgRound + ", id: " + this.id + "[" + this.round + "]) : [");
-			for(Message m : messages)
-				System.out.print("(s:" + m.getSender().id + ", v:" + m.getV() + "), ");
-			System.out.println("]");
-		//}
+		System.out.print("(round: " + msgRound + ", id: " + this.id + "[" + this.round + "]) : [");
+		for(Message m : messages)
+			System.out.print("(s:" + m.getSender().id + ", v:" + m.getV() + "), ");
+		System.out.println("]");
 	}
 	
 	@ScheduledMethod(start = 3, interval = 3)
