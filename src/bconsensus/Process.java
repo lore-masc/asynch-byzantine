@@ -35,6 +35,7 @@ public class Process {
 	protected Queue<Message> in_messages;
 	protected Queue<Message> out_messages;
 	protected ArrayList<Process> processes;
+	protected Integer proposed_v;
 	
 	
 	public Process(ContinuousSpace<Object> space, Grid<Object> grid, int id) {
@@ -51,11 +52,23 @@ public class Process {
 		this.processes = new ArrayList<Process>();
 		this.counter = new HashMap<Pair<Integer, Integer>, Counter>();
 		this.steps = new HashMap<Pair<Integer,Integer>, Integer>();
-		//this.rounds = new HashMap<Integer, Integer>();
+		this.proposed_v = null;
 	}
 	
 	public int getID() {
 		return this.id;
+	}
+	
+	public double getPhase() {
+		return this.round/3;
+	}
+	
+	public int getRound() {
+		return ((this.round%3) + 1);
+	}
+	
+	public int getValue() {
+		return this.proposed_v;
 	}
 	
 	protected void initial(Process sender, int v, int k) {
@@ -103,7 +116,7 @@ public class Process {
 			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
 				this.steps.put(Pair.of(this.id, this.round), 0);
 				
-				int proposed_v = RandomHelper.nextIntFromTo(0, 1);
+				proposed_v = RandomHelper.nextIntFromTo(0, 1);
 				this.broadcast(this.round, proposed_v);
 				
 				if(this instanceof FailAndStop) {
@@ -123,6 +136,7 @@ public class Process {
 
 				System.out.println("PHASE 2: " + this.id);
 				System.out.println(this.id + " broadcasts " + this.value);
+				proposed_v = this.value;
 				this.broadcast(this.round, this.value);
 			}
 		} else if (this.round % 3 == 2) {			// Phase 3
@@ -132,6 +146,7 @@ public class Process {
 				System.out.println("PHASE 3: " + this.id);
 				System.out.println(this.id + " broadcasts " + this.value + " with label = " + this.label);
 				
+				proposed_v = this.value;
 				this.broadcast(this.round, this.value);
 			}
 		}

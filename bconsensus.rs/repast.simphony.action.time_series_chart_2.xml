@@ -1,0 +1,36 @@
+<repast.simphony.chart2.engine.TimeSeriesChartDescriptor simphonyVersion="2.7.0">
+  <name>Phase in time</name>
+  <dataSet>Phase</dataSet>
+  <xAxisLabel>Tick Count</xAxisLabel>
+  <yAxisLabel>#Phase</yAxisLabel>
+  <chartTitle>Phase in time</chartTitle>
+  <type>TIME_SERIES</type>
+  <background class="javax.swing.plaf.ColorUIResource">
+    <value>-1</value>
+    <falpha>0.0</falpha>
+  </background>
+  <gridLineColor>
+    <red>153</red>
+    <green>153</green>
+    <blue>153</blue>
+    <alpha>255</alpha>
+  </gridLineColor>
+  <showGrid>true</showGrid>
+  <showLegend>true</showLegend>
+  <seriesIds>
+    <entry>
+      <string>Phase_Number</string>
+      <SeriesData>
+        <label>Phase_Number</label>
+        <color>
+          <red>0</red>
+          <green>0</green>
+          <blue>255</blue>
+          <alpha>255</alpha>
+        </color>
+      </SeriesData>
+    </entry>
+  </seriesIds>
+  <dataValueIds/>
+  <plotRangeLength>-1</plotRangeLength>
+</repast.simphony.chart2.engine.TimeSeriesChartDescriptor>
