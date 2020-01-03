@@ -107,11 +107,12 @@ public class Process {
 				this.broadcast(this.round, proposed_v);
 				
 				if(this instanceof FailAndStop) {
- 					System.out.print("*");
+ 					System.out.println("*");
 				} else if (this instanceof ByzantineProcess) {
-					System.out.print("!");
+					System.out.println("! " + this.id + " broadcasts " + proposed_v + " !");
+				} else {
+					System.out.println(this.id + " broadcasts " + proposed_v);
 				}
-				System.out.print(this.id + " broadcasts " + proposed_v);
 				
 				
 				System.out.println();
@@ -279,8 +280,6 @@ public class Process {
 		int t = (((n / 3) - 1) > 0) ? (n / 3) - 1 : 0;			// number of faulty processes
 		int set[] = new int[2];
 		boolean msgLabel = true;
-		
-		System.out.println("LIMITE: " +  (n-t));
 		
 		if(this.validatedSet.containsKey(msgRound)) {
 			ArrayList<Message> messages = this.validatedSet.get(msgRound);
