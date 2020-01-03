@@ -51,21 +51,37 @@ public class BConsensusBuilder implements ContextBuilder<Object> {
 
 		Parameters params = RunEnvironment.getInstance().getParameters();
 		int processesCount = (Integer) params.getValue("processes_count");
-		int t = (Integer) params.getValue("byzantine_processes");
-		ArrayList<Integer> fault_indexes = new ArrayList<Integer>();
-		for (int i = t; i > 0 && fault_indexes.size() < processesCount; i--) {
-			int n = RandomHelper.nextIntFromTo(0, processesCount);
-			if (!fault_indexes.contains(n))
-				fault_indexes.add(n);
+		int byz = (Integer) params.getValue("byzantine_processes");
+		int fail = (Integer) params.getValue("fail_processes");
+		ArrayList<Integer> byz_indexes = new ArrayList<Integer>();
+		ArrayList<Integer> fail_indexes = new ArrayList<Integer>();
+		int i = byz;
+		while (i > 0 && byz_indexes.size() < processesCount) {
+			int n = RandomHelper.nextIntFromTo(0, processesCount - 1);
+			if (!byz_indexes.contains(n)) {
+				byz_indexes.add(n);
+				i--;
+			}
+		}
+		
+		i = fail;
+		while (i > 0 && fail_indexes.size() < processesCount) { 
+			int n = RandomHelper.nextIntFromTo(0, processesCount - 1);
+			if (!fail_indexes.contains(n) && !byz_indexes.contains(n)) {
+				fail_indexes.add(n);
+				i--;
+			}
 		}
 		
 		ArrayList<Process> processes = new ArrayList<Process>();
-		for (int i = 0; i < processesCount; i++) {
+		for (int id = 0; id < processesCount; id++) {
 			Process p;
-			if (fault_indexes.contains(i))
-				p = new ByzantineProcess(space, grid, i);
+			if (fail_indexes.contains(id))
+				p = new FailAndStop(space, grid, id);
+			else if (byz_indexes.contains(id))
+				p = new ByzantineProcess(space, grid, id);
 			else
-				p = new Process(space, grid, i);
+				p = new Process(space, grid, id);
 			
 			processes.add(p);
 			context.add(p);

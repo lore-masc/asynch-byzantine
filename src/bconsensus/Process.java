@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.poi.ss.formula.IStabilityClassifier;
 
 import counter.Counter;
 import message.Message;
@@ -21,20 +22,19 @@ import repast.simphony.util.ContextUtils;
 
 public class Process {
 	static final int ACTIVITIES = 2;
-	private ContinuousSpace<Object> space;
-	private Grid<Object> grid;
-	private int id;
-	private Integer decision;
-	private int round;
-	private boolean label;
-	private Integer value;
-	private HashMap< Integer, ArrayList<Message> > validatedSet; 
-	private HashMap<Pair<Integer, Integer>, Counter> counter; 			// get the echo/ready counter given a sender process id
-	private HashMap<Pair<Integer, Integer>, Integer> steps;
-	//private HashMap<Integer, Integer> rounds;
-	Queue<Message> in_messages;
-	Queue<Message> out_messages;
-	ArrayList<Process> processes;
+	protected ContinuousSpace<Object> space;
+	protected Grid<Object> grid;
+	protected int id;
+	protected Integer decision;
+	protected int round;
+	protected boolean label;
+	protected Integer value;
+	protected HashMap< Integer, ArrayList<Message> > validatedSet; 
+	protected HashMap<Pair<Integer, Integer>, Counter> counter; 			// get the echo/ready counter given a sender process id
+	protected HashMap<Pair<Integer, Integer>, Integer> steps;
+	protected Queue<Message> in_messages;
+	protected Queue<Message> out_messages;
+	protected ArrayList<Process> processes;
 	
 	
 	public Process(ContinuousSpace<Object> space, Grid<Object> grid, int id) {
@@ -58,19 +58,19 @@ public class Process {
 		return this.id;
 	}
 	
-	private void initial(Process sender, int v, int k) {
+	protected void initial(Process sender, int v, int k) {
 		// send to all
 		for (Process to : this.processes) 
 			this.out_messages.add(new Message(sender, to, Message.MessageType.INITIAL, v, this.label, k));
 	}
 	
-	private void echo(Process sender, int v, int k) {
+	protected void echo(Process sender, int v, int k) {
 		// send to all
 		for (Process to : this.processes)
 			this.out_messages.add(new Message(sender, to, Message.MessageType.ECHO, v, this.label, k));		
 	}
 	
-	private void ready(Process sender, int v, int k) {
+	protected void ready(Process sender, int v, int k) {
 		// send to all
 		for (Process to : this.processes)
 			this.out_messages.add(new Message(sender, to, Message.MessageType.READY, v, this.label, k));		
@@ -105,7 +105,16 @@ public class Process {
 				
 				int proposed_v = RandomHelper.nextIntFromTo(0, 1);
 				this.broadcast(this.round, proposed_v);
-				System.out.println(this.id + " broadcasts " + proposed_v);
+				
+				if(this instanceof FailAndStop) {
+ 					System.out.print("*");
+				} else if (this instanceof ByzantineProcess) {
+					System.out.print("!");
+				}
+				System.out.print(this.id + " broadcasts " + proposed_v);
+				
+				
+				System.out.println();
 			}
 		} else if (this.round % 3 == 1) {			// Phase 2
 			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
@@ -172,7 +181,7 @@ public class Process {
 	public void receive() {		
 		Parameters params = RunEnvironment.getInstance().getParameters();
 		int n = this.processes.size();
-		int t = ((n / 3 - 1) > 0) ? n / 3 - 1 : 0;			// number of byzantine processes
+		int t = ((n / 3 - 1) > 0) ? n / 3 - 1 : 0;			// number of faulty processes
 		Message msg = this.in_messages.remove();
 		int v = msg.getV();
 		Process sender = msg.getSender();
@@ -185,14 +194,14 @@ public class Process {
 		}
 		
 		
-		if (msg.getType() == Message.MessageType.INITIAL /*&& this.round == msg.getRound()*/ && this.steps.get(Pair.of(sender.id, msg.getRound())) <= 1) {
+		if (msg.getType() == Message.MessageType.INITIAL && this.steps.get(Pair.of(sender.id, msg.getRound())) <= 1) {
 			//if (this.step == 0)
 			//	this.initial(sender, v, this.round);
 			this.echo(sender, v, msg.getRound());
 			this.steps.put(Pair.of(sender.id, msg.getRound()), 2);
 		}
 		else if (msg.getType() == Message.MessageType.ECHO) {
-			if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) > 0 /*&& this.round == msg.getRound()*/) {
+			if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) > 0) {
 				Counter count = new Counter();
 				
 				//Increment or create the counter
@@ -210,7 +219,7 @@ public class Process {
 			}
 			Counter def = new Counter();
 			Counter count = counter.getOrDefault(Pair.of(sender.id, msg.getRound()), def);
-			if (/*this.round == msg.getRound() &&*/ count.mostEchoValueCounter() > (n + t) / 2) {
+			if (count.mostEchoValueCounter() > (n + t) / 2) {
 				
 				if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) == 1 || this.steps.get(Pair.of(sender.id, msg.getRound())) == 2) {
 					if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) == 1) {
@@ -243,7 +252,7 @@ public class Process {
 			}
 			Counter def = new Counter();
 			Counter count = counter.getOrDefault(Pair.of(sender.id, msg.getRound()), def);
-			if (/*this.round == msg.getRound() && */count.mostReadyValueCounter() > t + 1) {
+			if (count.mostReadyValueCounter() > t + 1) {
 				if (this.steps.get(Pair.of(sender.id, msg.getRound())) == 1 || this.steps.get(Pair.of(sender.id, msg.getRound())) == 2) {
 					if (this.steps.get(Pair.of(sender.id, msg.getRound())) == 1) {
 						this.echo(sender, count.mostReadyValue(), msg.getRound());
@@ -267,9 +276,11 @@ public class Process {
 	public void check_validate_set(int msgRound) {
 		Parameters params = RunEnvironment.getInstance().getParameters();
 		int n = this.processes.size();
-		int t = ((n / 3 - 1) > 0) ? n / 3 - 1 : 0;			// number of byzantine processes
+		int t = (((n / 3) - 1) > 0) ? (n / 3) - 1 : 0;			// number of faulty processes
 		int set[] = new int[2];
 		boolean msgLabel = true;
+		
+		System.out.println("LIMITE: " +  (n-t));
 		
 		if(this.validatedSet.containsKey(msgRound)) {
 			ArrayList<Message> messages = this.validatedSet.get(msgRound);
