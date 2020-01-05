@@ -6,8 +6,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.poi.ss.formula.IStabilityClassifier;
-
 import counter.Counter;
 import message.Message;
 import repast.simphony.context.Context;
@@ -36,7 +34,6 @@ public class Process {
 	protected Queue<Message> out_messages;
 	protected ArrayList<Process> processes;
 	protected Integer proposed_v;
-	
 	
 	public Process(ContinuousSpace<Object> space, Grid<Object> grid, int id) {
 		this.space = space;
@@ -67,8 +64,12 @@ public class Process {
 		return ((this.round%3) + 1);
 	}
 	
-	public int getValue() {
+	public Integer getValue() {
 		return this.proposed_v;
+	}
+	
+	public Integer getDecision() {
+		return this.decision;
 	}
 	
 	protected void initial(Process sender, int v, int k) {
@@ -116,15 +117,15 @@ public class Process {
 			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
 				this.steps.put(Pair.of(this.id, this.round), 0);
 				
-				proposed_v = RandomHelper.nextIntFromTo(0, 1);
-				this.broadcast(this.round, proposed_v);
+				this.proposed_v = RandomHelper.nextIntFromTo(0, 1);
+				this.broadcast(this.round, this.proposed_v);
 				
 				if(this instanceof FailAndStop) {
- 					System.out.println("*");
+ 					System.out.println("* "+ this.id + " broadcasts " + this.proposed_v);
 				} else if (this instanceof ByzantineProcess) {
-					System.out.println("! " + this.id + " broadcasts " + proposed_v + " !");
+					System.out.println("! " + this.id + " broadcasts " + this.proposed_v + " !");
 				} else {
-					System.out.println(this.id + " broadcasts " + proposed_v);
+					System.out.println(this.id + " broadcasts " + this.proposed_v);
 				}
 				
 				
@@ -136,7 +137,7 @@ public class Process {
 
 				System.out.println("PHASE 2: " + this.id);
 				System.out.println(this.id + " broadcasts " + this.value);
-				proposed_v = this.value;
+				this.proposed_v = this.value;
 				this.broadcast(this.round, this.value);
 			}
 		} else if (this.round % 3 == 2) {			// Phase 3
@@ -146,7 +147,7 @@ public class Process {
 				System.out.println("PHASE 3: " + this.id);
 				System.out.println(this.id + " broadcasts " + this.value + " with label = " + this.label);
 				
-				proposed_v = this.value;
+				this.proposed_v = this.value;
 				this.broadcast(this.round, this.value);
 			}
 		}

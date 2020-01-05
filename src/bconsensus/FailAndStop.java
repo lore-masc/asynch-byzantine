@@ -1,6 +1,5 @@
 package bconsensus;
 
-import message.Message;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.grid.Grid;
 

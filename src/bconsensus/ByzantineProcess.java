@@ -1,7 +1,5 @@
 package bconsensus;
 
-import com.sun.xml.internal.bind.v2.Messages;
-
 import message.Message;
 import message.Message.MessageType;
 import repast.simphony.space.continuous.ContinuousSpace;

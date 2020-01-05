@@ -7,13 +7,13 @@
 									
 		/>
 				<parameter name="byzantine_processes" displayName="Number of byzantine processes" type="int" 
-						defaultValue="4" 
+						defaultValue="2" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									
 		/>
 				<parameter name="fail_processes" displayName="Number of Fail-Stop processes" type="int" 
-						defaultValue="0" 
+						defaultValue="1" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									

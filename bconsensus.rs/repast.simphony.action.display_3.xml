@@ -4,7 +4,7 @@
   <styles>
     <entry>
       <string>bconsensus.Process</string>
-      <string>repast.simphony.visualizationOGL2D.DefaultStyleOGL2D</string>
+      <string>styles.ProcessStyle</string>
     </entry>
   </styles>
   <editedStyles>
@@ -49,7 +49,7 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>REPEAT</frequency>
-    <hashCode>1311983774</hashCode>
+    <hashCode>1021621912</hashCode>
   </schedParams>
   <layoutClassName>foo.bar.baz</layoutClassName>
   <layoutProjection>space</layoutProjection>
