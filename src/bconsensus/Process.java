@@ -117,7 +117,10 @@ public class Process {
 			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
 				this.steps.put(Pair.of(this.id, this.round), 0);
 				
-				this.proposed_v = RandomHelper.nextIntFromTo(0, 1);
+				if (this.getPhase() == 0)
+					this.proposed_v = RandomHelper.nextIntFromTo(0, 1);
+				else
+					this.proposed_v = this.value;
 				this.broadcast(this.round, this.proposed_v);
 				
 				if(this instanceof FailAndStop) {
@@ -151,16 +154,6 @@ public class Process {
 				this.broadcast(this.round, this.value);
 			}
 		}
-		
-		/*if (this.id == 0) {			
-			for(Pair<Integer, Integer> p : this.counter.keySet()) {
-				Counter count = new Counter();
-				count = counter.getOrDefault(p, count);
-				synchronized (count) {
-					System.out.println("PAIR: (" + p.getLeft() + " ; " + p.getRight() + ") - Echo 0: " + count.getEcho0() + " - Echo 1: " + count.getEcho1() + " Ready 0: " + count.getReady0() + " Ready 1: " + count.getReady1());
-				}
-			}
-		}*/
 		
 		if(this.decision != null)
 			System.out.println(this.id + " DECIDES " + this.decision);
@@ -203,17 +196,12 @@ public class Process {
 		int v = msg.getV();
 		Process sender = msg.getSender();
 
-		/*if(!this.rounds.containsKey(sender.id)) {
-			this.rounds.put(sender.id, msg.getRound());
-		}*/
 		if(!this.steps.containsKey(Pair.of(sender.id, msg.getRound()))) {
 			this.steps.put(Pair.of(sender.id, msg.getRound()), 0);
 		}
 		
 		
 		if (msg.getType() == Message.MessageType.INITIAL && this.steps.get(Pair.of(sender.id, msg.getRound())) <= 1) {
-			//if (this.step == 0)
-			//	this.initial(sender, v, this.round);
 			this.echo(sender, v, msg.getRound());
 			this.steps.put(Pair.of(sender.id, msg.getRound()), 2);
 		}
@@ -347,7 +335,6 @@ public class Process {
 	}
 	
 	public void update_validate_set(Message msg) {
-		//System.out.println(msg.getSender().id + " ACCEPTED " + msg.getV() + " with ROUND " + msg.getRound());
 		int msgRound = msg.getRound();
 		
 		ArrayList<Message> messages;

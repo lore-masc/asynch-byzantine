@@ -29,12 +29,10 @@ public class ByzantineProcess extends Process {
 	private void byzBehaviour (Process sender, int v, int k, MessageType msgType) {
 		int byz = v;
 		
-		if(k % 3 > 0) {
-			if(v == 0)
-				byz = 1;
-			else
-				byz = 0;
-		}
+		if(v == 0)
+			byz = 1;
+		else
+			byz = 0;
 		
 		if(msgType == Message.MessageType.INITIAL) {
 			System.out.println("! " +  sender.id + " broadcasts " + byz + " !" );

@@ -26,7 +26,7 @@ public class BConsensusBuilder implements ContextBuilder<Object> {
 	public Context build(Context<Object> context) {
 		context.setId("bconsensus");
 		
-		// create direct link networks to represent broadcasting
+		// create direct link networks to represent broadcast messages
 		NetworkBuilder<Object> initial_net = new NetworkBuilder<Object>(
 				"initial_net", context, true);
 		initial_net.buildNetwork();
@@ -55,6 +55,8 @@ public class BConsensusBuilder implements ContextBuilder<Object> {
 		int fail = (Integer) params.getValue("fail_processes");
 		ArrayList<Integer> byz_indexes = new ArrayList<Integer>();
 		ArrayList<Integer> fail_indexes = new ArrayList<Integer>();
+		
+		// Extract random indexes in order to select byzantin processes
 		int i = byz;
 		while (i > 0 && byz_indexes.size() < processesCount) {
 			int n = RandomHelper.nextIntFromTo(0, processesCount - 1);
@@ -64,7 +66,8 @@ public class BConsensusBuilder implements ContextBuilder<Object> {
 			}
 		}
 		
-		i = fail;
+		// Extract random indexes in order to select fail and stop processes, if they can exist
+		i = (processesCount - byz_indexes.size() > fail) ? fail : processesCount - byz_indexes.size();
 		while (i > 0 && fail_indexes.size() < processesCount) { 
 			int n = RandomHelper.nextIntFromTo(0, processesCount - 1);
 			if (!fail_indexes.contains(n) && !byz_indexes.contains(n)) {
@@ -73,6 +76,7 @@ public class BConsensusBuilder implements ContextBuilder<Object> {
 			}
 		}
 		
+		// Initialize processes based on type
 		ArrayList<Process> processes = new ArrayList<Process>();
 		for (int id = 0; id < processesCount; id++) {
 			Process p;
@@ -87,6 +91,7 @@ public class BConsensusBuilder implements ContextBuilder<Object> {
 			context.add(p);
 		}
 		
+		// Communicate network members
 		for (Process p : processes)
 			p.processes = processes;
 		
