@@ -30,9 +30,11 @@ public class Process {
 	protected HashMap< Integer, ArrayList<Message> > validatedSet; 
 	protected HashMap<Pair<Integer, Integer>, Counter> counter; 			// get the echo/ready counter given a sender process id
 	protected HashMap<Pair<Integer, Integer>, Integer> steps;
+	protected HashMap<Integer, Integer> winner;								// given the round (key) it returns the winner's value
 	protected Queue<Message> in_messages;
 	protected Queue<Message> out_messages;
 	protected ArrayList<Process> processes;
+	protected ArrayList<Message> prematured_messages;
 	protected Integer proposed_v;
 	
 	public Process(ContinuousSpace<Object> space, Grid<Object> grid, int id) {
@@ -47,8 +49,10 @@ public class Process {
 		this.in_messages = new LinkedList<Message>();
 		this.out_messages = new LinkedList<Message>();
 		this.processes = new ArrayList<Process>();
+		this.prematured_messages = new ArrayList<Message>();
 		this.counter = new HashMap<Pair<Integer, Integer>, Counter>();
 		this.steps = new HashMap<Pair<Integer,Integer>, Integer>();
+		this.winner = new HashMap<Integer, Integer>();
 		this.proposed_v = null;
 	}
 	
@@ -113,14 +117,14 @@ public class Process {
 				workload--;
 		}
 		
-		if (this.round % 3 == 0) {					// Phase 1
+		if (this.round % 3 == 0) {					// Round 1
 			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
 				this.steps.put(Pair.of(this.id, this.round), 0);
 				
-				if (this.getPhase() == 0)
+				if (this.getPhase() == 0)	//
 					this.proposed_v = RandomHelper.nextIntFromTo(0, 1);
-				else
-					this.proposed_v = this.value;
+				else	//
+					this.proposed_v = this.value;	//
 				this.broadcast(this.round, this.proposed_v);
 				
 				if(this instanceof FailAndStop) {
@@ -134,7 +138,7 @@ public class Process {
 				
 				System.out.println();
 			}
-		} else if (this.round % 3 == 1) {			// Phase 2
+		} else if (this.round % 3 == 1) {			// Round 2
 			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
 				this.steps.put(Pair.of(this.id, this.round), 0);
 
@@ -143,7 +147,7 @@ public class Process {
 				this.proposed_v = this.value;
 				this.broadcast(this.round, this.value);
 			}
-		} else if (this.round % 3 == 2) {			// Phase 3
+		} else if (this.round % 3 == 2) {			// Round 3
 			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
 				this.steps.put(Pair.of(this.id, this.round), 0);
 				
@@ -195,11 +199,16 @@ public class Process {
 		Message msg = this.in_messages.remove();
 		int v = msg.getV();
 		Process sender = msg.getSender();
-
+		
+		// Postpone the elaboration of message, if it anticipates the current round for process p
+		if (msg.getRound() > this.round) {
+			this.prematured_messages.add(msg);
+			return;
+		}
+		
 		if(!this.steps.containsKey(Pair.of(sender.id, msg.getRound()))) {
 			this.steps.put(Pair.of(sender.id, msg.getRound()), 0);
 		}
-		
 		
 		if (msg.getType() == Message.MessageType.INITIAL && this.steps.get(Pair.of(sender.id, msg.getRound())) <= 1) {
 			this.echo(sender, v, msg.getRound());
@@ -240,7 +249,7 @@ public class Process {
 			}
 		}
 		else if (msg.getType() == Message.MessageType.READY) {
-			if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) > 0 /*&& this.round == msg.getRound()*/) {
+			if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) > 0) {
 				Counter count = new Counter();
 				//Increment or create the counter
 				if(counter.keySet().contains(Pair.of(sender.id, msg.getRound())) && v <= 1) {
@@ -269,7 +278,7 @@ public class Process {
 					this.steps.put(Pair.of(sender.id, msg.getRound()), step);
 				}
 			}
-			if (count.mostReadyValueCounter() > 2 * t + 1 && this.steps.get(Pair.of(sender.id, msg.getRound())) == 3) {
+			if (msg.getV() == count.mostReadyValue() && count.mostReadyValueCounter() > 2 * t + 1 && this.steps.get(Pair.of(sender.id, msg.getRound())) == 3) {
 				update_validate_set(msg);
 				check_validate_set(msg.getRound());
 			}
@@ -283,18 +292,35 @@ public class Process {
 		int n = this.processes.size();
 		int t = (((n / 3) - 1) > 0) ? (n / 3) - 1 : 0;			// number of faulty processes
 		int set[] = new int[2];
-		boolean msgLabel = true;
+		int msgLabel = 0;
 		
 		if(this.validatedSet.containsKey(msgRound)) {
 			ArrayList<Message> messages = this.validatedSet.get(msgRound);
+			ArrayList<Message> majority_messages = new ArrayList<>();
 			
-			for (Message message : messages) {
+			// Count the frequencies
+			for (Message message : messages) 
 				set[message.getV()]++;
-				if(!message.getLabel())
-					msgLabel = message.getLabel();
+						
+			// Collect the majority messages
+			int majority_value;
+			if(set[0] >= set[1]) {
+				majority_value = 0;
+			} else {
+				majority_value = 1;
 			}
 			
-			if(messages.size() == (n-t) && this.round == msgRound) {
+			for (Message message : messages)
+				if (message.getV() == majority_value)
+					majority_messages.add(message);
+						
+			// Count how many of them are labeled
+			for (Message message : majority_messages) 
+				if(message.getLabel())
+					msgLabel++;
+			
+			// Check validate set in order to decide the next step
+			if(/*msgRound == 2 && msgLabel > t  || msgRound < 2 && */messages.size() == (n-t) && this.round == msgRound) {
 				switch (this.round % 3) {
 				case 0:
 					if(set[0] >= set[1]) {
@@ -314,10 +340,10 @@ public class Process {
 				case 2:
 					boolean d = false;
 					for (int i = 0; i < set.length && !d; i++) {
-						if(set[i] > (2*t) && msgLabel) {
+						if(set[i] > (2*t) && msgLabel > (2*t)) {
 							this.decision = i;
 							d = true;
-						} else if (set[i] > t && msgLabel) {
+						} else if (set[i] > t && msgLabel > t) {
 							this.value = i;
 							d = true;
 						}
@@ -328,8 +354,11 @@ public class Process {
 					break;
 				}
 				
-				if(this.decision == null)
+				if(this.decision == null) {
+					this.winner.put(this.round, this.value);
 					this.round++;
+					this.check_prematured_messages();
+				}
 			}
 		}
 	}
@@ -344,18 +373,30 @@ public class Process {
 			messages = this.validatedSet.get(msgRound);
 		}
 		
-		if (!messages.contains(msg)) {
-			messages.add(msg);
-			this.validatedSet.put(msgRound, messages);
+		if (!messages.contains(msg)) {			
+			if (msgRound == 0 || (msgRound > 0 && msg.getV() == this.winner.get(msgRound - 1)) ) {
+				messages.add(msg);
+				this.validatedSet.put(msgRound, messages);
+			}
 		}
 		
 		System.out.print("(round: " + msgRound + ", id: " + this.id + "[" + this.round + "]) : [");
 		for(Message m : messages)
-			System.out.print("(s:" + m.getSender().id + ", v:" + m.getV() + "), ");
+			System.out.print("(s:" + m.getSender().id + ", v:" + m.getV() + ((m.getLabel()) ? "*" : "") + "), ");
 		System.out.println("]");
 	}
 	
-	@ScheduledMethod(start = 3, interval = 3)
+	public void check_prematured_messages() {
+		while (!this.prematured_messages.isEmpty()) {
+			Message msg = this.prematured_messages.remove(0);
+			if (msg.getRound() == this.round)
+				this.in_messages.add(msg);
+			else
+				this.prematured_messages.add(msg);
+		}
+	}
+	
+	@ScheduledMethod(start = 1, interval = 3)
 	public void clearNetowrks() {
 		// Repast utilities used to draw edges
 		Context<Object> context = ContextUtils.getContext(this);

@@ -2,6 +2,7 @@ package bconsensus;
 
 import message.Message;
 import message.Message.MessageType;
+import repast.simphony.random.RandomHelper;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.grid.Grid;
 
@@ -13,32 +14,28 @@ public class ByzantineProcess extends Process {
 
 	@Override
 	protected void initial(Process sender, int v, int k) {
-		byzBehaviour(sender, v, k, Message.MessageType.INITIAL);
+		byzBehaviour(sender, k, Message.MessageType.INITIAL);
 	}
 	
 	@Override
 	protected void echo(Process sender, int v, int k) {
-		byzBehaviour(sender, v, k, Message.MessageType.ECHO);
+		byzBehaviour(sender, k, Message.MessageType.ECHO);
 	}
 	
 	@Override
 	protected void ready(Process sender, int v, int k) {
-		byzBehaviour(sender, v, k, Message.MessageType.READY);
+		byzBehaviour(sender, k, Message.MessageType.READY);
 	}
 	
-	private void byzBehaviour (Process sender, int v, int k, MessageType msgType) {
-		int byz = v;
-		
-		if(v == 0)
-			byz = 1;
+	private void byzBehaviour (Process sender, int k, MessageType msgType) {
+		boolean label;
+		if (RandomHelper.nextIntFromTo(0, 1) == 1)
+			label = true;
 		else
-			byz = 0;
+			label = false;
 		
-		if(msgType == Message.MessageType.INITIAL) {
-			System.out.println("! " +  sender.id + " broadcasts " + byz + " !" );
-		}
 		for (Process to : this.processes) 
-			this.out_messages.add(new Message(sender, to, msgType, byz, this.label, k));
+			this.out_messages.add(new Message(sender, to, msgType, RandomHelper.nextIntFromTo(0, 1), label, k));
 	} 
 	
 }
