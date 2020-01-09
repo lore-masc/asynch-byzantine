@@ -1,10 +1,10 @@
 <repast.simphony.visualization.engine.CartesianDisplayDescriptor simphonyVersion="2.7.0">
-  <name>Value Space</name>
+  <name>State Space</name>
   <type>2D</type>
   <styles>
     <entry>
       <string>bconsensus.Process</string>
-      <string>styles.ProcessValueStyle</string>
+      <string>styles.ProcessStateStyle</string>
     </entry>
   </styles>
   <editedStyles>
@@ -30,15 +30,15 @@
   <editedNetStyles>
     <entry>
       <string>echo_net</string>
-      <string>echo_net.style_3.xml</string>
+      <string>echo_net.style_4.xml</string>
     </entry>
     <entry>
       <string>ready_net</string>
-      <string>ready_net.style_3.xml</string>
+      <string>ready_net.style_4.xml</string>
     </entry>
     <entry>
       <string>initial_net</string>
-      <string>initial_net.style_4.xml</string>
+      <string>initial_net.style_5.xml</string>
     </entry>
   </editedNetStyles>
   <frequency>ON_MOVE</frequency>
@@ -49,7 +49,7 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>REPEAT</frequency>
-    <hashCode>-710252623</hashCode>
+    <hashCode>-452026291</hashCode>
   </schedParams>
   <layoutClassName>foo.bar.baz</layoutClassName>
   <layoutProjection>space</layoutProjection>

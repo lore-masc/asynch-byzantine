@@ -69,33 +69,45 @@ public class Process {
 	}
 	
 	public Integer getValue() {
+		if (this.proposed_v == null)
+			return -1;
 		return this.proposed_v;
 	}
 	
 	public Integer getDecision() {
+		if (this.decision== null)
+			return -1;
 		return this.decision;
 	}
 	
-	protected void initial(Process sender, int v, int k) {
+	public Boolean getLabel() {
+		 return this.label;
+	}
+		 
+	public Object getProcess() {
+		 return this.getClass();
+	}
+	
+	protected void initial(Process sender, int v, boolean label, int k) {
 		// send to all
 		for (Process to : this.processes) 
-			this.out_messages.add(new Message(sender, to, Message.MessageType.INITIAL, v, this.label, k));
+			this.out_messages.add(new Message(sender, to, Message.MessageType.INITIAL, v, label, k));
 	}
 	
-	protected void echo(Process sender, int v, int k) {
+	protected void echo(Process sender, int v, boolean label, int k) {
 		// send to all
 		for (Process to : this.processes)
-			this.out_messages.add(new Message(sender, to, Message.MessageType.ECHO, v, this.label, k));		
+			this.out_messages.add(new Message(sender, to, Message.MessageType.ECHO, v, label, k));		
 	}
 	
-	protected void ready(Process sender, int v, int k) {
+	protected void ready(Process sender, int v, boolean label, int k) {
 		// send to all
 		for (Process to : this.processes)
-			this.out_messages.add(new Message(sender, to, Message.MessageType.READY, v, this.label, k));		
+			this.out_messages.add(new Message(sender, to, Message.MessageType.READY, v, label, k));		
 	}
 	
 	@ScheduledMethod(start = 1, interval = 1)
-	public void phase() {	
+	public void node() {	
 		// How many work this process can do in this step
 		Parameters params = RunEnvironment.getInstance().getParameters();
 		int min_workload = (Integer) params.getValue("min_workload");
@@ -117,9 +129,17 @@ public class Process {
 				workload--;
 		}
 		
+		this.consensus();
+		
+		if(this.decision != null)
+			System.out.println(this.id + " DECIDES " + this.decision);
+	}
+	
+	protected void consensus() {
 		if (this.round % 3 == 0) {					// Round 1
 			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
 				this.steps.put(Pair.of(this.id, this.round), 0);
+				this.label = false;
 				
 				if (this.getPhase() == 0)	//
 					this.proposed_v = RandomHelper.nextIntFromTo(0, 1);
@@ -127,16 +147,7 @@ public class Process {
 					this.proposed_v = this.value;	//
 				this.broadcast(this.round, this.proposed_v);
 				
-				if(this instanceof FailAndStop) {
- 					System.out.println("* "+ this.id + " broadcasts " + this.proposed_v);
-				} else if (this instanceof ByzantineProcess) {
-					System.out.println("! " + this.id + " broadcasts " + this.proposed_v + " !");
-				} else {
-					System.out.println(this.id + " broadcasts " + this.proposed_v);
-				}
-				
-				
-				System.out.println();
+				System.out.println(this.id + " broadcasts " + this.proposed_v);
 			}
 		} else if (this.round % 3 == 1) {			// Round 2
 			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
@@ -158,13 +169,10 @@ public class Process {
 				this.broadcast(this.round, this.value);
 			}
 		}
-		
-		if(this.decision != null)
-			System.out.println(this.id + " DECIDES " + this.decision);
 	}
 	
-	private void broadcast(int r, int v) {
-		this.initial(this, v, r);
+	protected void broadcast(int r, int v) {
+		this.initial(this, v, this.label, r);
 		this.steps.put(Pair.of(this.id, r), 1);
 	}
 	
@@ -211,7 +219,7 @@ public class Process {
 		}
 		
 		if (msg.getType() == Message.MessageType.INITIAL && this.steps.get(Pair.of(sender.id, msg.getRound())) <= 1) {
-			this.echo(sender, v, msg.getRound());
+			this.echo(sender, v, msg.getLabel(), msg.getRound());
 			this.steps.put(Pair.of(sender.id, msg.getRound()), 2);
 		}
 		else if (msg.getType() == Message.MessageType.ECHO) {
@@ -237,9 +245,9 @@ public class Process {
 				
 				if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) == 1 || this.steps.get(Pair.of(sender.id, msg.getRound())) == 2) {
 					if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1) == 1) {
-						this.echo(sender, count.mostEchoValue(), msg.getRound());
+						this.echo(sender, count.mostEchoValue(), msg.getLabel(), msg.getRound());
 					} else if (this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 2) == 2) {
-						this.ready(sender, count.mostEchoValue(), msg.getRound());
+						this.ready(sender, count.mostEchoValue(), msg.getLabel(), msg.getRound());
 					}
 					
 					int step = this.steps.getOrDefault(Pair.of(sender.id, msg.getRound()), 1);
@@ -269,15 +277,16 @@ public class Process {
 			if (count.mostReadyValueCounter() > t + 1) {
 				if (this.steps.get(Pair.of(sender.id, msg.getRound())) == 1 || this.steps.get(Pair.of(sender.id, msg.getRound())) == 2) {
 					if (this.steps.get(Pair.of(sender.id, msg.getRound())) == 1) {
-						this.echo(sender, count.mostReadyValue(), msg.getRound());
+						this.echo(sender, count.mostReadyValue(), msg.getLabel(), msg.getRound());
 					} else if (this.steps.get(Pair.of(sender.id, msg.getRound())) == 2) {
-						this.ready(sender, count.mostReadyValue(), msg.getRound());
+						this.ready(sender, count.mostReadyValue(), msg.getLabel(), msg.getRound());
 					}
 					int step = this.steps.get(Pair.of(sender.id, msg.getRound()));
 					step++;
 					this.steps.put(Pair.of(sender.id, msg.getRound()), step);
 				}
 			}
+
 			if (msg.getV() == count.mostReadyValue() && count.mostReadyValueCounter() > 2 * t + 1 && this.steps.get(Pair.of(sender.id, msg.getRound())) == 3) {
 				update_validate_set(msg);
 				check_validate_set(msg.getRound());

@@ -10,17 +10,17 @@ public class FailAndStop extends Process {
 	}
 	
 	@Override
-	protected void initial(Process sender, int v, int k) {
+	protected void initial(Process sender, int v, boolean label, int k) {
 
 	}
 	
 	@Override
-	protected void echo(Process sender, int v, int k) {
+	protected void echo(Process sender, int v, boolean label, int k) {
 
 	}
 	
 	@Override
-	protected void ready(Process sender, int v, int k) {
+	protected void ready(Process sender, int v, boolean label, int k) {
 		
 	}
 	

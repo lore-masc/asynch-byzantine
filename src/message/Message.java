@@ -45,7 +45,7 @@ public class Message {
 		boolean t = false;
 		if (o instanceof Message) {
 			Message msgo = (Message) o;
-			if(this.type.equals(msgo.type) && this.sender.getID() == msgo.sender.getID() && this.v == msgo.v && this.round == msgo.round) {
+			if(this.type.equals(msgo.type) && this.sender.getID() == msgo.sender.getID() && this.v == msgo.v && this.round == msgo.round &&this.label == msgo.label) {
 				t = true;
 			}
 		}
