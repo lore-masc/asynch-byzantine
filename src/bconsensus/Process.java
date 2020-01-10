@@ -142,10 +142,10 @@ public class Process {
 					this.steps.put(Pair.of(this.id, this.round), 0);
 					this.label = false;
 					
-					if (this.getPhase() == 0)	//
+					if (this.getPhase() == 0)
 						this.proposed_v = RandomHelper.nextIntFromTo(0, 1);
-					else	//
-						this.proposed_v = this.value;	//
+					else
+						this.proposed_v = this.value;
 					this.broadcast(this.round, this.proposed_v);
 					
 					System.out.println(this.id + " broadcasts " + this.proposed_v);
@@ -331,7 +331,7 @@ public class Process {
 					msgLabel++;
 			
 			// Check validate set in order to decide the next step
-			if(/*msgRound == 2 && msgLabel > t  || msgRound < 2 && */messages.size() == (n-t) && this.round == msgRound) {
+			if(messages.size() == (n-t) && this.round == msgRound) {
 				switch (this.round % 3) {
 				case 0:
 					if(set[0] >= set[1]) {
