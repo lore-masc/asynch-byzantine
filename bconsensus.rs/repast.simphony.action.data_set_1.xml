@@ -1,6 +1,7 @@
 <repast.simphony.data2.engine.DataSetDescriptor simphonyVersion="2.7.0">
-  <name>Phase</name>
-  <type>AGGREGATE</type>
+  <name>Data</name>
+  <type>NON_AGGREGATE</type>
+  <sourceType>bconsensus.Process</sourceType>
   <inclTick>true</inclTick>
   <inclBatchRun>false</inclBatchRun>
   <inclRandomSeed>false</inclRandomSeed>
@@ -11,17 +12,64 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>REPEAT</frequency>
-    <hashCode>1732989684</hashCode>
+    <hashCode>891172211</hashCode>
   </scheduleParams>
   <atEnd>false</atEnd>
   <methodDataSources class="linked-hash-map">
     <entry>
-      <string>Phase_Number</string>
+      <string>Decision</string>
       <repast.simphony.data2.engine.MethodDataSourceDefinition>
-        <id>Phase_Number</id>
+        <id>Decision</id>
+        <className>bconsensus.Process</className>
+        <methodName>getDecision</methodName>
+      </repast.simphony.data2.engine.MethodDataSourceDefinition>
+    </entry>
+    <entry>
+      <string>ID</string>
+      <repast.simphony.data2.engine.MethodDataSourceDefinition>
+        <id>ID</id>
+        <className>bconsensus.Process</className>
+        <methodName>getID</methodName>
+      </repast.simphony.data2.engine.MethodDataSourceDefinition>
+    </entry>
+    <entry>
+      <string>Label</string>
+      <repast.simphony.data2.engine.MethodDataSourceDefinition>
+        <id>Label</id>
+        <className>bconsensus.Process</className>
+        <methodName>getLabel</methodName>
+      </repast.simphony.data2.engine.MethodDataSourceDefinition>
+    </entry>
+    <entry>
+      <string>Phase</string>
+      <repast.simphony.data2.engine.MethodDataSourceDefinition>
+        <id>Phase</id>
         <className>bconsensus.Process</className>
         <methodName>getPhase</methodName>
-        <aggType>MEAN</aggType>
+      </repast.simphony.data2.engine.MethodDataSourceDefinition>
+    </entry>
+    <entry>
+      <string>Process</string>
+      <repast.simphony.data2.engine.MethodDataSourceDefinition>
+        <id>Process</id>
+        <className>bconsensus.Process</className>
+        <methodName>getProcess</methodName>
+      </repast.simphony.data2.engine.MethodDataSourceDefinition>
+    </entry>
+    <entry>
+      <string>Round</string>
+      <repast.simphony.data2.engine.MethodDataSourceDefinition>
+        <id>Round</id>
+        <className>bconsensus.Process</className>
+        <methodName>getRound</methodName>
+      </repast.simphony.data2.engine.MethodDataSourceDefinition>
+    </entry>
+    <entry>
+      <string>Value</string>
+      <repast.simphony.data2.engine.MethodDataSourceDefinition>
+        <id>Value</id>
+        <className>bconsensus.Process</className>
+        <methodName>getValue</methodName>
       </repast.simphony.data2.engine.MethodDataSourceDefinition>
     </entry>
   </methodDataSources>

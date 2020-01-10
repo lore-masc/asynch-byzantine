@@ -138,16 +138,18 @@ public class Process {
 	protected void consensus() {
 		if (this.round % 3 == 0) {					// Round 1
 			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {
-				this.steps.put(Pair.of(this.id, this.round), 0);
-				this.label = false;
-				
-				if (this.getPhase() == 0)	//
-					this.proposed_v = RandomHelper.nextIntFromTo(0, 1);
-				else	//
-					this.proposed_v = this.value;	//
-				this.broadcast(this.round, this.proposed_v);
-				
-				System.out.println(this.id + " broadcasts " + this.proposed_v);
+				if (!(this instanceof FailAndStop)) {
+					this.steps.put(Pair.of(this.id, this.round), 0);
+					this.label = false;
+					
+					if (this.getPhase() == 0)	//
+						this.proposed_v = RandomHelper.nextIntFromTo(0, 1);
+					else	//
+						this.proposed_v = this.value;	//
+					this.broadcast(this.round, this.proposed_v);
+					
+					System.out.println(this.id + " broadcasts " + this.proposed_v);
+				}
 			}
 		} else if (this.round % 3 == 1) {			// Round 2
 			if (!this.steps.containsKey(Pair.of(this.id, this.round))) {

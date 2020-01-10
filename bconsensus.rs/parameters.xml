@@ -7,7 +7,7 @@
 									
 		/>
 				<parameter name="byzantine_processes" displayName="Number of byzantine processes" type="int" 
-						defaultValue="3" 
+						defaultValue="7" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									
@@ -19,19 +19,19 @@
 									
 		/>
 				<parameter name="min_workload" displayName="Workload for node (Min)" type="int" 
-						defaultValue="10" 
+						defaultValue="7000" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									
 		/>
 				<parameter name="max_workload" displayName="Workload for node (Max)" type="int" 
-						defaultValue="10" 
+						defaultValue="7000" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									
 		/>
 				<parameter name="processes_count" displayName="Number of total processes" type="int" 
-						defaultValue="12" 
+						defaultValue="45" 
 						isReadOnly="false" 
 						converter="repast.simphony.parameter.StringConverterFactory$IntConverter"
 									
